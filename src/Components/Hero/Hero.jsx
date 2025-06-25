@@ -1,13 +1,10 @@
 import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
-
-// Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-// Sample images (replace with your actual images)
 const slides = [
   {
     id: 1,
@@ -28,7 +25,7 @@ const slides = [
 
 const Hero = () => {
   return (
-    <div className="relative w-full min-h-[70vh] bg-gradient-to-r from-pink-50 to-gray-50 overflow-hidden">
+    <div className="relative w-full min-h-[70vh] bg-gradient-to-r from-pink-0 to-gray-50 overflow-hidden pt-12"> {/* Added pt-16 */}
       {/* Slideshow Section */}
       <div className="absolute inset-0 z-0 w-full h-full">
         <Swiper
