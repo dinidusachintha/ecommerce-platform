@@ -7,7 +7,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black shadow-md">
       <div className="container px-4 py-3 mx-auto">
         <div className="flex items-center justify-between">
           {/* Navbar Logo */}
@@ -24,16 +24,16 @@ const Navbar = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex md:items-center md:space-x-8">
             <div className="flex space-x-6">
-              <Link to="/about" className="px-3 py-2 text-gray-700 transition duration-300 hover:text-blue-600">
-                About
+              <Link to="/" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
+                HOME
               </Link>
-              <Link to="/contact" className="px-3 py-2 text-gray-700 transition duration-300 hover:text-blue-600">
-                Contact
+              <Link to="/contact" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
+                COLLECTION
               </Link>
-              <Link to="/blog" className="px-3 py-2 text-gray-700 transition duration-300 hover:text-blue-600">
+              <Link to="/blog" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
                 Blog
               </Link>
-              <Link to="/destinations" className="px-3 py-2 text-gray-700 transition duration-300 hover:text-blue-900">
+              <Link to="/destinations" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
                 Destinations
               </Link>
             </div>
@@ -42,13 +42,13 @@ const Navbar = () => {
             <div className="flex items-center ml-10 space-x-4">
               <Link
                 to="/login"
-                className="px-4 py-2 text-blue-900 transition duration-300 rounded-full hover:bg-gray-200"
+                className="px-4 py-2 text-white transition duration-300 rounded-full hover:bg-pink-700"
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className="px-4 py-2 text-white transition duration-300 bg-blue-900 rounded-full hover:bg-blue-700"
+                className="px-4 py-2 text-white transition duration-300 bg-pink-900 rounded-full hover:bg-pink-700"
               >
                 Sign Up
               </Link>
@@ -59,7 +59,7 @@ const Navbar = () => {
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-900 focus:outline-none"
+              className="text-pink-900 focus:outline-none"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -73,43 +73,43 @@ const Navbar = () => {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link 
               to="/about" 
-              className="block px-3 py-2 text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-100"
+              className="block px-3 py-2 text-gray-700 rounded-md hover:text-pink-600 hover:bg-gray-100"
               onClick={() => setIsOpen(false)}
             >
-              About
+              HOME
             </Link>
             <Link 
-              to="/contact" 
-              className="block px-3 py-2 text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-100"
+              to="/" 
+              className="block px-3 py-2 text-gray-700 rounded-md hover:text-pink-600 hover:bg-gray-100"
               onClick={() => setIsOpen(false)}
             >
-              Contact
+              COLLECTION
             </Link>
             <Link 
-              to="/blog" 
-              className="block px-3 py-2 text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-100"
+              to="/collection" 
+              className="block px-3 py-2 text-gray-700 rounded-md hover:text-pink-600 hover:bg-gray-100"
               onClick={() => setIsOpen(false)}
             >
-              Blog
+              ABOUT
             </Link>
             <Link 
-              to="/destinations" 
-              className="block px-3 py-2 text-gray-700 rounded-md hover:text-blue-600 hover:bg-gray-100"
+              to="/about" 
+              className="block px-3 py-2 text-gray-700 rounded-md hover:text-pink-600 hover:bg-gray-100"
               onClick={() => setIsOpen(false)}
             >
-              Destinations
+              CONTACT
             </Link>
             <div className="pt-4 mt-4 border-t border-gray-200">
               <Link 
-                to="/login" 
-                className="block w-full px-4 py-2 text-center text-blue-600 rounded-md hover:bg-gray-100"
+                to="/contact" 
+                className="block w-full px-4 py-2 text-center text-pink-600 rounded-md hover:bg-gray-100"
                 onClick={() => setIsOpen(false)}
               >
                 Sign In
               </Link>
               <Link 
                 to="/signup" 
-                className="block w-full px-4 py-2 mt-2 text-center text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                className="block w-full px-4 py-2 mt-2 text-center text-white bg-pink-600 rounded-md hover:bg-pink-700"
                 onClick={() => setIsOpen(false)}
               >
                 Sign Up
