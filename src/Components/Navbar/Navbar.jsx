@@ -106,12 +106,12 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="absolute w-full bg-black shadow-lg md:hidden">
+        <div className="absolute w-full bg-white shadow-lg md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <NavLink 
               to="/" 
               className={({ isActive }) => 
-                `block px-3 py-2 rounded-md hover:bg-pink-900 ${
+                `block px-3 py-2 rounded-md hover:bg-gray-300 ${
                   isActive ? 'text-red-500 font-bold' : 'text-pink-500'
                 }`
               }
@@ -122,7 +122,7 @@ const Navbar = () => {
             <NavLink 
               to="/collection" 
               className={({ isActive }) => 
-                `block px-3 py-2 rounded-md hover:bg-pink-900 ${
+                `block px-3 py-2 rounded-md hover:bg-gray-300 ${
                   isActive ? 'text-red-500 font-bold' : 'text-pink-500'
                 }`
               }
@@ -133,7 +133,7 @@ const Navbar = () => {
             <NavLink 
               to="/about" 
               className={({ isActive }) => 
-                `block px-3 py-2 rounded-md hover:bg-pink-900 ${
+                `block px-3 py-2 rounded-md hover:bg-gray-300 ${
                   isActive ? 'text-red-500 font-bold' : 'text-pink-500'
                 }`
               }
@@ -144,7 +144,7 @@ const Navbar = () => {
             <NavLink 
               to="/contact" 
               className={({ isActive }) => 
-                `block px-3 py-2 rounded-md hover:bg-pink-900 ${
+                `block px-3 py-2 rounded-md hover:bg-gray-300 ${
                   isActive ? 'text-red-500 font-bold' : 'text-pink-500'
                 }`
               }
