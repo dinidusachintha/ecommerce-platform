@@ -1,16 +1,67 @@
 import React from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
+// Sample images (replace with your actual images)
+const slides = [
+  {
+    id: 1,
+    image: 'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93',
+    alt: 'Fashion collection'
+  },
+  {
+    id: 2,
+    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b',
+    alt: 'Elegant dresses'
+  },
+  {
+    id: 3,
+    image: 'https://images.unsplash.com/photo-1525507119028-ed4c629a60a3',
+    alt: 'Accessories showcase'
+  }
+];
 
 const Hero = () => {
   return (
-    <div className="relative flex flex-col items-center justify-center w-full min-h-[70vh] bg-gradient-to-r from-pink-50 to-gray-50 overflow-hidden">
-      {/* Background decorative elements (optional) */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-10">
-        <div className="absolute w-40 h-40 bg-pink-300 rounded-full top-20 left-10 mix-blend-multiply filter blur-xl"></div>
-        <div className="absolute bg-purple-300 rounded-full bottom-10 right-10 w-60 h-60 mix-blend-multiply filter blur-xl"></div>
+    <div className="relative w-full min-h-[70vh] bg-gradient-to-r from-pink-50 to-gray-50 overflow-hidden">
+      {/* Slideshow Section */}
+      <div className="absolute inset-0 z-0 w-full h-full">
+        <Swiper
+          spaceBetween={0}
+          centeredSlides={true}
+          autoplay={{
+            delay: 5000,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+          }}
+          navigation={true}
+          modules={[Autoplay, Pagination, Navigation]}
+          className="w-full h-full"
+        >
+          {slides.map((slide) => (
+            <SwiperSlide key={slide.id}>
+              <div className="relative w-full h-full">
+                <img 
+                  src={slide.image} 
+                  alt={slide.alt}
+                  className="object-cover w-full h-full opacity-40"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-6xl px-4 py-16 mx-auto text-center sm:px-6 lg:px-8">
+      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full max-w-6xl px-4 py-16 mx-auto text-center sm:px-6 lg:px-8">
         <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl lg:text-7xl">
           <span className="block">Welcome to Our</span>
           <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
@@ -31,15 +82,6 @@ const Hero = () => {
           </button>
         </div>
       </div>
-
-      {/* Hero Image (optional - you can add an image here) */}
-      {/* <div className="relative w-full max-w-4xl mx-auto mt-12 sm:mt-16 lg:mt-20">
-        <img 
-          src="/path-to-your-hero-image.jpg" 
-          alt="Hero showcase" 
-          className="rounded-lg shadow-2xl"
-        />
-      </div> */}
     </div>
   );
 };
