@@ -27,14 +27,14 @@ const Navbar = () => {
               <Link to="/" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
                 HOME
               </Link>
-              <Link to="/contact" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
+              <Link to="/collection" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
                 COLLECTION
               </Link>
-              <Link to="/blog" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
-                Blog
+              <Link to="/about" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
+                ABOUT
               </Link>
-              <Link to="/destinations" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
-                Destinations
+              <Link to="/contact" className="px-3 py-2 text-pink-500 transition duration-300 hover:text-red-600">
+                CONTACT
               </Link>
             </div>
 
@@ -44,13 +44,13 @@ const Navbar = () => {
                 to="/login"
                 className="px-4 py-2 text-white transition duration-300 rounded-full hover:bg-pink-700"
               >
-                Sign In
+                SIGN IN
               </Link>
               <Link
                 to="/signup"
                 className="px-4 py-2 text-white transition duration-300 bg-pink-900 rounded-full hover:bg-pink-700"
               >
-                Sign Up
+                SIGN UP
               </Link>
             </div>
           </div>
