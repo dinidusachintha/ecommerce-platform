@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "../../assets/images/Logo.png";
+import cart from "../../assets/images/cartlogo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,8 +53,19 @@ const Navbar = () => {
               >
                 SIGN UP
               </Link>
+              <div className="flex-shrink-0">
+            <Link to="/cart">
+              <img
+                src={cart}
+                alt="cart logo"
+                className="w-auto h-10"
+              />
+            </Link>
+          </div>
+
             </div>
           </div>
+          
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
