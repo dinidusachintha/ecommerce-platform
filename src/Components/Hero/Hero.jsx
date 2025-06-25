@@ -25,58 +25,64 @@ const slides = [
 
 const Hero = () => {
   return (
-    <div className="relative w-full min-h-[70vh] bg-gradient-to-r from-pink-0 to-gray-50 overflow-hidden pt-12"> {/* Added pt-16 */}
-      {/* Slideshow Section */}
-      <div className="absolute inset-0 z-0 w-full h-full">
-        <Swiper
-          spaceBetween={0}
-          centeredSlides={true}
-          autoplay={{
-            delay: 5000,
-            disableOnInteraction: false,
-          }}
-          pagination={{
-            clickable: true,
-          }}
-          navigation={true}
-          modules={[Autoplay, Pagination, Navigation]}
-          className="w-full h-full"
-        >
-          {slides.map((slide) => (
-            <SwiperSlide key={slide.id}>
-              <div className="relative w-full h-full">
-                <img 
-                  src={slide.image} 
-                  alt={slide.alt}
-                  className="object-cover w-full h-full opacity-40"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
+    <div className="relative w-full min-h-[70vh] bg-gradient-to-r from-pink-50 to-gray-50 overflow-hidden pt-12">
+      <div className="container flex flex-col items-center h-full mx-auto md:flex-row">
+        {/* Slideshow Section - Left Side */}
+        <div className="w-full h-full px-4 py-8 md:w-1/2 md:py-0">
+          <div className="relative h-full overflow-hidden shadow-xl rounded-xl">
+            <Swiper
+              spaceBetween={0}
+              centeredSlides={true}
+              autoplay={{
+                delay: 5000,
+                disableOnInteraction: false,
+              }}
+              pagination={{
+                clickable: true,
+              }}
+              navigation={true}
+              modules={[Autoplay, Pagination, Navigation]}
+              className="w-full h-full"
+            >
+              {slides.map((slide) => (
+                <SwiperSlide key={slide.id}>
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={slide.image} 
+                      alt={slide.alt}
+                      className="object-cover w-full h-full"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        </div>
 
-      {/* Hero Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full max-w-6xl px-4 py-16 mx-auto text-center sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl lg:text-7xl">
-          <span className="block">Welcome to Our</span>
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
-            Exclusive Collection
-          </span>
-        </h1>
-        
-        <p className="max-w-3xl mx-auto mt-6 text-xl text-gray-600 sm:text-2xl">
-          Discover unique items and explore our carefully curated selection of premium products.
-        </p>
-        
-        <div className="flex flex-col mt-10 space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 sm:justify-center">
-          <button className="px-8 py-3 text-lg font-medium text-white transition-all duration-300 transform rounded-lg shadow-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 hover:shadow-xl hover:-translate-y-1">
-            Explore Now
-          </button>
-          <button className="px-8 py-3 text-lg font-medium text-pink-600 transition-all duration-300 bg-white border border-pink-500 rounded-lg shadow-lg hover:bg-pink-50 hover:shadow-xl hover:-translate-y-1">
-            Learn More
-          </button>
+        {/* Hero Content - Right Side */}
+        <div className="flex items-center w-full h-full px-4 py-8 md:w-1/2 md:py-0">
+          <div className="relative z-10 w-full max-w-lg mx-auto text-center md:text-left">
+            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl lg:text-7xl">
+              <span className="block">Welcome to Our</span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
+                Exclusive Collection
+              </span>
+            </h1>
+            
+            <p className="max-w-xl mx-auto mt-6 text-xl text-gray-600 md:mx-0 sm:text-2xl">
+              Discover unique items and explore our carefully curated selection of premium products.
+            </p>
+            
+            <div className="flex flex-col mt-10 space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 sm:justify-start md:justify-start">
+              <button className="px-8 py-3 text-lg font-medium text-white transition-all duration-300 transform rounded-lg shadow-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 hover:shadow-xl hover:-translate-y-1">
+                Explore Now
+              </button>
+              <button className="px-8 py-3 text-lg font-medium text-pink-600 transition-all duration-300 bg-white border border-pink-500 rounded-lg shadow-lg hover:bg-pink-50 hover:shadow-xl hover:-translate-y-1">
+                Learn More
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
