@@ -5,10 +5,9 @@ import About from './Pages/About'
 import Contact from './Pages/Contact'
 import Cart from './Pages/Cart'
 import Login from './Pages/Login'
-import PlaceOrder from './Pages/PlaceOrder'
-import Orders from './Pages/Orders'
 import Navbar from './Components/Navbar/Navbar'
 import ProductView from './Components/ProductView/ProductView'
+import Checkout from './Pages/Checkout'
 
 
 const App = () => {
@@ -21,9 +20,8 @@ const App = () => {
         <Route path='/contact' element={<Contact />} />
         <Route path='/cart' element={<Cart />} />
         <Route path='/login' element={<Login />} />
-        <Route path='/place-order' element={<PlaceOrder />} />
-        <Route path='/orders' element={<Orders />} />
         <Route path="/product/:id" element={<ProductView />} />
+        <Route path='/checkout' element={<Checkout />} />
 
         </Routes>
     </div>
