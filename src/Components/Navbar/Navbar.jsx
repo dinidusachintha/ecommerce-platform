@@ -24,8 +24,8 @@ const Navbar = () => {
               <NavLink 
                 to="/" 
                 className={({ isActive }) => 
-                  `px-3 py-2 transition duration-300 hover:text-red-600 ${
-                    isActive ? 'text-red-500 font-bold' : 'text-pink-500'
+                  `px-3 py-2 transition duration-300 hover:text-sky-600 ${
+                    isActive ? 'text-sky-500 font-bold' : 'text-pink-500'
                   }`
                 }
               >
@@ -34,8 +34,8 @@ const Navbar = () => {
               <NavLink 
                 to="/collection" 
                 className={({ isActive }) => 
-                  `px-3 py-2 transition duration-300 hover:text-red-600 ${
-                    isActive ? 'text-red-500 font-bold' : 'text-pink-500'
+                  `px-3 py-2 transition duration-300 hover:text-sky-600 ${
+                    isActive ? 'text-sky-500 font-bold' : 'text-pink-500'
                   }`
                 }
               >
@@ -44,8 +44,8 @@ const Navbar = () => {
               <NavLink 
                 to="/about" 
                 className={({ isActive }) => 
-                  `px-3 py-2 transition duration-300 hover:text-red-600 ${
-                    isActive ? 'text-red-500 font-bold' : 'text-pink-500'
+                  `px-3 py-2 transition duration-300 hover:text-sky-600 ${
+                    isActive ? 'text-sky-500 font-bold' : 'text-pink-500'
                   }`
                 }
               >
@@ -54,8 +54,8 @@ const Navbar = () => {
               <NavLink 
                 to="/contact" 
                 className={({ isActive }) => 
-                  `px-3 py-2 transition duration-300 hover:text-red-600 ${
-                    isActive ? 'text-red-500 font-bold' : 'text-pink-500'
+                  `px-3 py-2 transition duration-300 hover:text-sky-600 ${
+                    isActive ? 'text-sky-500 font-bold' : 'text-pink-500'
                   }`
                 }
               >
