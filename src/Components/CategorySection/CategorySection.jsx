@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { Link } from 'react-router-dom';
 import 'swiper/css';
 
 // Import images from your assets folder
@@ -22,6 +23,7 @@ import teddy1 from '../../assets/images/men1.png';
 
 const CategorySection = () => {
   const [activeCategory, setActiveCategory] = useState("women");
+  const [cart, setCart] = useState([]);
 
   const categories = [
     {
@@ -46,19 +48,19 @@ const CategorySection = () => {
 
   const products = {
     women: [
-      { id: 1, name: "Summer Dress", price: "$49.99", image: dress1 },
-      { id: 2, name: "High Heels", price: "$89.99", image: heels1 },
-      { id: 3, name: "Leather Bag", price: "$129.99", image: bag1 }
+      { id: 1, name: "Summer Dress", price: 49.99, image: dress1, description: "A stylish and lightweight summer dress, perfect for casual outings or beach trips." },
+      { id: 2, name: "High Heels", price: 89.99, image: heels1, description: "Elegant high heels for formal occasions, crafted with premium leather." },
+      { id: 3, name: "Leather Bag", price: 129.99, image: bag1, description: "A spacious leather bag with modern design, ideal for daily use." }
     ],
     men: [
-      { id: 4, name: "Formal Shirt", price: "$59.99", image: shirt1 },
-      { id: 5, name: "Casual Shoes", price: "$79.99", image: shoes1 },
-      { id: 6, name: "Leather Wallet", price: "$39.99", image: wallet1 }
+      { id: 4, name: "Formal Shirt", price: 59.99, image: shirt1, description: "A crisp formal shirt, perfect for office or events." },
+      { id: 5, name: "Casual Shoes", price: 79.99, image: shoes1, description: "Comfortable casual shoes for everyday wear." },
+      { id: 6, name: "Leather Wallet", price: 39.99, image: wallet1, description: "Sleek leather wallet with multiple compartments." }
     ],
     kids: [
-      { id: 7, name: "Cotton T-Shirt", price: "$19.99", image: tshirt1 },
-      { id: 8, name: "Sneakers", price: "$29.99", image: sneakers1 },
-      { id: 9, name: "Teddy Bear", price: "$24.99", image: teddy1 }
+      { id: 7, name: "Cotton T-Shirt", price: 19.99, image: tshirt1, description: "Soft cotton t-shirt for kids, available in vibrant colors." },
+      { id: 8, name: "Sneakers", price: 29.99, image: sneakers1, description: "Durable sneakers for active kids." },
+      { id: 9, name: "Teddy Bear", price: 24.99, image: teddy1, description: "Cuddly teddy bear, perfect for kids of all ages." }
     ]
   };
 
@@ -94,6 +96,19 @@ const CategorySection = () => {
         ease: "easeOut"
       }
     }
+  };
+
+  // Add to cart function
+  const addToCart = (product) => {
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1
+    };
+    setCart([...cart, cartItem]);
+    alert(`${product.name} added to cart!`);
   };
 
   return (
@@ -137,13 +152,13 @@ const CategorySection = () => {
         
         {/* Featured Category Banner */}
         <motion.div 
-          className="relative mb-12 overflow-hidden rounded-xl h-96"
+          className="relative mb-12 overflow-hidden rounded-xl"
           variants={bannerVariants}
         >
           <img
             src={categories.find(c => c.id === activeCategory)?.banner}
             alt="Category Banner"
-            className="object-cover w-full h-full"
+            className="object-contain w-full h-auto max-h-[600px]"
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
             <motion.h3 
@@ -207,22 +222,23 @@ const CategorySection = () => {
                 custom={index}
                 whileHover={{ scale: 1.03 }}
               >
-                <div className="h-64 overflow-hidden">
+                <Link to={`/product/${product.id}`}>
                   <motion.img
                     src={product.image}
                     alt={product.name}
-                    className="object-cover w-full h-full"
+                    className="object-contain w-full h-auto max-h-[300px]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
                     whileHover={{ scale: 1.1 }}
                   />
-                </div>
+                </Link>
                 <div className="p-4">
                   <h3 className="mb-2 text-lg font-semibold">{product.name}</h3>
-                  <p className="mb-4 font-bold text-pink-500">{product.price}</p>
+                  <p className="mb-4 font-bold text-pink-500">${product.price.toFixed(2)}</p>
                   <motion.button 
                     className="w-full py-2 text-white transition-colors bg-pink-500 rounded hover:bg-pink-600"
+                    onClick={() => addToCart(product)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
