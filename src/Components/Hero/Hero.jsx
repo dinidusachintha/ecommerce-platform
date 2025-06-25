@@ -8,24 +8,24 @@ import 'swiper/css/navigation';
 const slides = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93',
+    image: 'https://images.unsplash.com/photo-1502898746234-cdef14a6eec4',
     alt: 'Fashion collection'
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b',
+    image: 'https://images.unsplash.com/photo-1582719188393-bb71ca45dbb9',
     alt: 'Elegant dresses'
   },
   {
     id: 3,
-    image: 'https://images.unsplash.com/photo-1525507119028-ed4c629a60a3',
+    image: 'https://images.unsplash.com/photo-1598600815245-f806c8259e1e',
     alt: 'Accessories showcase'
   }
 ];
 
 const Hero = () => {
   return (
-    <div className="relative w-full min-h-[70vh] bg-gradient-to-r from-pink-50 to-gray-50 overflow-hidden pt-12">
+    <div className="relative w-full min-h-[70vh] bg-gradient-to-r from-white to-gray-50 overflow-hidden pt-12">
       <div className="container flex flex-col items-center h-full mx-auto md:flex-row">
         {/* Slideshow Section - Left Side */}
         <div className="w-full h-full px-4 py-8 md:w-1/2 md:py-0">
