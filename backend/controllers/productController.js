@@ -1,13 +1,22 @@
 const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
-const cloudinary = require('cloudinary').v2;
+const path = require('path');
+const fs = require('fs');
 
-// Configure Cloudinary (you'll need to set up your credentials)
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Helper function to save files
+const saveFiles = (files) => {
+  return files.map(file => {
+    // Create a new filename to prevent conflicts
+    const newFilename = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
+    const filePath = path.join(__dirname, '../uploads', newFilename);
+    
+    // Move the file to uploads directory
+    fs.renameSync(file.path, filePath);
+    
+    // Return relative path for the database
+    return `/uploads/${newFilename}`;
+  });
+};
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -58,16 +67,12 @@ const getProductById = asyncHandler(async (req, res) => {
 const createProduct = asyncHandler(async (req, res) => {
   const { name, price, description, category, colors, sizes } = req.body;
 
-  // Upload images to Cloudinary
-  const imageUploads = req.files.map(file => 
-    cloudinary.uploader.upload(file.path, {
-      folder: 'ecommerce/products',
-      transformation: { width: 800, height: 800, crop: 'limit' }
-    })
-  );
+  if (!req.files || req.files.length === 0) {
+    res.status(400);
+    throw new Error('Please upload at least one image');
+  }
 
-  const uploadedImages = await Promise.all(imageUploads);
-  const imageUrls = uploadedImages.map(img => img.secure_url);
+  const imageUrls = saveFiles(req.files);
 
   const product = new Product({
     name,
@@ -101,24 +106,19 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   // Handle new image uploads if any
   if (req.files && req.files.length > 0) {
-    const imageUploads = req.files.map(file => 
-      cloudinary.uploader.upload(file.path, {
-        folder: 'ecommerce/products',
-        transformation: { width: 800, height: 800, crop: 'limit' }
-      })
-    );
-    const uploadedImages = await Promise.all(imageUploads);
-    imageUrls = [...imageUrls, ...uploadedImages.map(img => img.secure_url)];
+    const newImageUrls = saveFiles(req.files);
+    imageUrls = [...imageUrls, ...newImageUrls];
   }
 
   // Handle image deletions if any
   if (req.body.deletedImages && req.body.deletedImages.length > 0) {
-    // Delete from Cloudinary
-    await Promise.all(
-      req.body.deletedImages.map(publicId => 
-        cloudinary.uploader.destroy(publicId)
-      )
-    );
+    // Delete files from server
+    req.body.deletedImages.forEach(imagePath => {
+      const fullPath = path.join(__dirname, '../', imagePath);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    });
     // Remove from array
     imageUrls = imageUrls.filter(img => !req.body.deletedImages.includes(img));
   }
@@ -146,12 +146,13 @@ const deleteProduct = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
 
-  // Delete images from Cloudinary
-  await Promise.all(
-    product.images.map(publicId => 
-      cloudinary.uploader.destroy(publicId)
-    )
-  );
+  // Delete images from server
+  product.images.forEach(imagePath => {
+    const fullPath = path.join(__dirname, '../', imagePath);
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath);
+    }
+  });
 
   await product.remove();
   res.json({ message: 'Product removed' });

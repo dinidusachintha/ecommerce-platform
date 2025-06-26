@@ -13,6 +13,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
@@ -27,14 +29,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Routes
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
-
-// Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend', 'build', 'index.html'));
-  });
-}
 
 // Error Handling Middleware
 app.use(notFound);
