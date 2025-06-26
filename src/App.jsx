@@ -6,8 +6,11 @@ import Contact from './Pages/Contact'
 import Cart from './Pages/Cart'
 import Login from './Pages/Login'
 import Navbar from './Components/Navbar/Navbar'
-import ProductView from './Components/ProductView/ProductView'
+import ProductView from './Pages/Dinidu/ProductView'
 import Checkout from './Pages/Checkout'
+import Producadd from './Pages/Dinidu/Productadd'
+import Productupdate from './Pages/Dinidu/Productupdate'
+import Productlist from './Pages/Dinidu/Productlist'
 
 
 const App = () => {
@@ -22,6 +25,12 @@ const App = () => {
         <Route path='/login' element={<Login />} />
         <Route path="/product/:id" element={<ProductView />} />
         <Route path='/checkout' element={<Checkout />} />
+
+        <Route path='/productadd' element={<Producadd />} />
+        <Route path='/productupdate' element={<Productupdate />} />
+         <Route path='/productlist' element={<Productlist />} />
+
+
 
         </Routes>
     </div>
