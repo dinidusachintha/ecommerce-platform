@@ -30,7 +30,7 @@ const Productadd = () => {
         const categoriesData = Array.isArray(response.data) ? response.data : [];
         setCategories(categoriesData);
         if (categoriesData.length > 0) {
-          setProduct((prev) => ({ ...prev, category: categoriesData[0].id }));
+          setProduct(prev => ({ ...prev, category: categoriesData[0].id }));
         }
         setLoading(false);
       } catch (error) {
@@ -42,7 +42,77 @@ const Productadd = () => {
     fetchCategories();
   }, []);
 
-  // ... rest of the component (validateForm, handleInputChange, etc.)
+  const validateForm = () => {
+    const newErrors = {};
+    if (!product.name.trim()) newErrors.name = 'Name is required';
+    if (!product.price || isNaN(product.price)) newErrors.price = 'Valid price is required';
+    if (!product.description.trim()) newErrors.description = 'Description is required';
+    return newErrors;
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProduct({ ...product, [name]: value });
+  };
+
+  const handleAddColor = () => {
+    if (newColor && !product.colors.includes(newColor)) {
+      setProduct({ ...product, colors: [...product.colors, newColor] });
+      setNewColor('');
+    }
+  };
+
+  const handleAddSize = () => {
+    if (newSize && !product.sizes.includes(newSize)) {
+      setProduct({ ...product, sizes: [...product.sizes, newSize] });
+      setNewSize('');
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const newImages = [...product.images, ...files];
+    setProduct({ ...product, images: newImages });
+
+    // Create previews
+    const previews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews([...imagePreviews, ...previews]);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', product.name);
+      formData.append('price', product.price);
+      formData.append('description', product.description);
+      formData.append('category', product.category);
+      product.colors.forEach(color => formData.append('colors[]', color));
+      product.sizes.forEach(size => formData.append('sizes[]', size));
+      product.images.forEach(image => formData.append('images', image));
+
+      const response = await axios.post('/api/products', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      alert('Product added successfully!');
+      navigate('/admin/products'); // Redirect to products list
+    } catch (error) {
+      console.error('Error adding product:', error);
+      alert('Failed to add product');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -120,9 +190,6 @@ const Productadd = () => {
                       </option>
                     ))}
                   </select>
-                  {errors.categories && (
-                    <p className="mt-1 text-sm text-red-500">{errors.categories}</p>
-                  )}
                 </div>
                 <div className="mt-6">
                   <label className="block mb-2 font-medium">Description*</label>
@@ -141,7 +208,126 @@ const Productadd = () => {
                   )}
                 </div>
               </div>
-              {/* ... rest of the form (Colors, Sizes, Images, Submit Button) ... */}
+
+              {/* Colors */}
+              <div className="mb-8">
+                <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Colors</h2>
+                <div className="flex items-center gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newColor}
+                    onChange={(e) => setNewColor(e.target.value)}
+                    className="flex-1 p-2 border border-gray-300 rounded"
+                    placeholder="Add color (e.g., Red)"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddColor}
+                    className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((color, index) => (
+                    <div key={index} className="flex items-center px-3 py-1 bg-gray-100 rounded-full">
+                      <span>{color}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newColors = [...product.colors];
+                          newColors.splice(index, 1);
+                          setProduct({ ...product, colors: newColors });
+                        }}
+                        className="ml-2 text-red-500"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sizes */}
+              <div className="mb-8">
+                <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Sizes</h2>
+                <div className="flex items-center gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newSize}
+                    onChange={(e) => setNewSize(e.target.value)}
+                    className="flex-1 p-2 border border-gray-300 rounded"
+                    placeholder="Add size (e.g., M)"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSize}
+                    className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size, index) => (
+                    <div key={index} className="flex items-center px-3 py-1 bg-gray-100 rounded-full">
+                      <span>{size}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSizes = [...product.sizes];
+                          newSizes.splice(index, 1);
+                          setProduct({ ...product, sizes: newSizes });
+                        }}
+                        className="ml-2 text-red-500"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Images */}
+              <div className="mb-8">
+                <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Images</h2>
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="mb-4"
+                  accept="image/*"
+                />
+                <div className="grid grid-cols-3 gap-4">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img src={preview} alt={`Preview ${index}`} className="object-cover w-full h-32 rounded" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newImages = [...product.images];
+                          const newPreviews = [...imagePreviews];
+                          newImages.splice(index, 1);
+                          newPreviews.splice(index, 1);
+                          setProduct({ ...product, images: newImages });
+                          setImagePreviews(newPreviews);
+                        }}
+                        className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
+              >
+                {isSubmitting ? 'Adding Product...' : 'Add Product'}
+              </button>
             </form>
           </>
         )}
