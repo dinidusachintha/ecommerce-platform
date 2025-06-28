@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useParams, useNavigate } from 'react-router-dom';
 
-// Import images
-import productMain from '../../assets/images/kid2.png';
-import productAlt1 from '../../assets/images/kid2.png';
-import productAlt2 from '../../assets/images/kid2.png';
-import productAlt3 from '../../assets/images/kid2.png';
+// Mock product image
+const productImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgMTAwSDMwMFYzMDBIMTAwVjEwMFoiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtZGFzaGFycmF5PSI1IDUiLz4KPHN2ZyB4PSIxNzUiIHk9IjE3NSIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IiM5Q0EzQUYiPgo8cGF0aCBkPSJtMTQgNiAtNiA2aDQgdjUgaDQgdi01IGg0IHoiLz4KPHN2Zz4KPC9zdmc+";
 
 const ProductView = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
   // Product data
   const product = {
     id: 1,
@@ -29,7 +21,7 @@ const ProductView = () => {
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     colors: ["Black", "Brown", "Navy"],
-    images: [productMain, productAlt1, productAlt2, productAlt3],
+    images: [productImage, productImage, productImage, productImage],
     rating: 4.8,
     reviews: 142,
     stock: 15,
@@ -63,31 +55,28 @@ const ProductView = () => {
     alert(`${quantity} x ${product.name} (${selectedSize}) added to cart`);
   };
 
-  // Animations
-  const fadeIn = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.5 } }
+  const handleNavigate = (path) => {
+    console.log(`Navigating to: ${path}`);
   };
 
-  const slideUp = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } }
+  const getColorBackground = (color) => {
+    const colorMap = {
+      'Black': '#000000',
+      'Brown': '#8B4513',
+      'Navy': '#000080'
+    };
+    return colorMap[color] || color.toLowerCase();
   };
 
   return (
-    <motion.div 
-      className="container px-4 py-12 mx-auto bg-gray-50"
-      initial="hidden"
-      animate="visible"
-      variants={fadeIn}
-    >
+    <div className="container px-4 py-12 mx-auto bg-gray-50 animate-fade-in">
       <div className="max-w-6xl mx-auto">
         {/* Breadcrumb */}
         <nav className="mb-8 text-sm">
           <ol className="flex space-x-2">
-            <li><button onClick={() => navigate('/')} className="hover:underline">Home</button></li>
+            <li><button onClick={() => handleNavigate('/')} className="hover:underline">Home</button></li>
             <li>/</li>
-            <li><button onClick={() => navigate('/shop')} className="hover:underline">Shop</button></li>
+            <li><button onClick={() => handleNavigate('/shop')} className="hover:underline">Shop</button></li>
             <li>/</li>
             <li className="font-medium">{product.name}</li>
           </ol>
@@ -95,7 +84,7 @@ const ProductView = () => {
 
         <div className="grid gap-12 lg:grid-cols-2">
           {/* Image Gallery */}
-          <motion.div variants={slideUp} className="space-y-4">
+          <div className="space-y-4 animate-slide-up">
             <div className="relative overflow-hidden bg-white rounded-lg shadow-lg aspect-square">
               <img 
                 src={product.images[selectedImage]} 
@@ -120,20 +109,21 @@ const ProductView = () => {
             {/* Thumbnails */}
             <div className="grid grid-cols-4 gap-3">
               {product.images.map((img, index) => (
-                <motion.button
+                <button
                   key={index}
                   onClick={() => handleImageSelect(index)}
-                  className={`overflow-hidden bg-white rounded-md aspect-square ${selectedImage === index ? 'ring-2 ring-black' : ''}`}
-                  whileHover={{ scale: 1.05 }}
+                  className={`overflow-hidden bg-white rounded-md aspect-square transition-all duration-200 hover:scale-105 ${
+                    selectedImage === index ? 'ring-2 ring-black' : ''
+                  }`}
                 >
                   <img src={img} alt="" className="object-cover w-full h-full" />
-                </motion.button>
+                </button>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Product Info */}
-          <motion.div variants={slideUp} className="space-y-6">
+          <div className="space-y-6 animate-slide-up">
             {/* Brand & Title */}
             <div>
               <p className="text-lg font-medium text-gray-500">{product.brand}</p>
@@ -180,12 +170,13 @@ const ProductView = () => {
               </div>
               <div className="flex space-x-3">
                 {product.colors.map((color) => (
-                  <motion.button
+                  <button
                     key={color}
                     onClick={() => handleColorSelect(color)}
-                    className={`w-10 h-10 rounded-full border-2 ${selectedColor === color ? 'border-black' : 'border-gray-200'}`}
-                    style={{ backgroundColor: color.toLowerCase() }}
-                    whileHover={{ scale: 1.1 }}
+                    className={`w-10 h-10 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
+                      selectedColor === color ? 'border-black' : 'border-gray-200'
+                    }`}
+                    style={{ backgroundColor: getColorBackground(color) }}
                     title={color}
                   />
                 ))}
@@ -205,18 +196,21 @@ const ProductView = () => {
               </div>
               <div className="grid grid-cols-5 gap-2">
                 {product.sizes.map((size) => (
-                  <motion.button
+                  <button
                     key={size}
                     onClick={() => handleSizeSelect(size)}
-                    className={`py-2 border rounded-md ${selectedSize === size ? 'bg-black text-white border-black' : 'border-gray-300 hover:border-gray-500'}`}
-                    whileHover={{ scale: 1.05 }}
+                    className={`py-2 border rounded-md transition-all duration-200 hover:scale-105 ${
+                      selectedSize === size 
+                        ? 'bg-black text-white border-black' 
+                        : 'border-gray-300 hover:border-gray-500'
+                    }`}
                   >
                     {size}
-                  </motion.button>
+                  </button>
                 ))}
               </div>
               {showSizeGuide && (
-                <div className="p-4 mt-4 text-sm bg-gray-100 rounded-lg">
+                <div className="p-4 mt-4 text-sm bg-gray-100 rounded-lg animate-fade-in">
                   <h4 className="mb-2 font-medium">Size Guide</h4>
                   <table className="w-full">
                     <thead>
@@ -265,7 +259,7 @@ const ProductView = () => {
                 <div className="flex border border-gray-300 rounded-md">
                   <button 
                     onClick={() => handleQuantityChange(quantity - 1)}
-                    className="px-3 py-2 text-lg font-medium"
+                    className="px-3 py-2 text-lg font-medium hover:bg-gray-100 disabled:opacity-50"
                     disabled={quantity <= 1}
                   >
                     -
@@ -276,11 +270,11 @@ const ProductView = () => {
                     onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
                     min="1"
                     max={product.stock}
-                    className="w-16 py-2 text-center border-gray-300 border-x"
+                    className="w-16 py-2 text-center border-gray-300 border-x focus:outline-none"
                   />
                   <button 
                     onClick={() => handleQuantityChange(quantity + 1)}
-                    className="px-3 py-2 text-lg font-medium"
+                    className="px-3 py-2 text-lg font-medium hover:bg-gray-100 disabled:opacity-50"
                     disabled={quantity >= product.stock}
                   >
                     +
@@ -294,29 +288,24 @@ const ProductView = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col pt-4 space-y-3">
-              <motion.button
+              <button
                 onClick={handleAddToCart}
-                className="w-full py-3 font-medium text-white bg-black rounded-md hover:bg-gray-800"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                className="w-full py-3 font-medium text-white bg-black rounded-md hover:bg-gray-800 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
               >
                 Add to Cart
-              </motion.button>
-              <motion.button
+              </button>
+              <button
                 onClick={() => {
                   handleAddToCart();
-                  navigate('/checkout');
+                  handleNavigate('/checkout');
                 }}
-                className="w-full py-3 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                className="w-full py-3 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
               >
                 Buy Now
-              </motion.button>
-              <motion.button
+              </button>
+              <button
                 onClick={toggleWishlist}
-                className="flex items-center justify-center w-full py-3 font-medium border border-gray-300 rounded-md hover:bg-gray-100"
-                whileHover={{ scale: 1.01 }}
+                className="flex items-center justify-center w-full py-3 font-medium border border-gray-300 rounded-md hover:bg-gray-100 transition-all duration-200 hover:scale-[1.01]"
               >
                 {isWishlist ? (
                   <>
@@ -333,7 +322,7 @@ const ProductView = () => {
                     Add to Wishlist
                   </>
                 )}
-              </motion.button>
+              </button>
             </div>
 
             {/* Delivery Info */}
@@ -351,18 +340,22 @@ const ProductView = () => {
                 <span>SKU: {product.sku}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Product Tabs */}
-        <motion.div variants={slideUp} className="mt-16">
+        <div className="mt-16 animate-slide-up">
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px space-x-8">
               {['description', 'features', 'reviews', 'care'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-1 font-medium text-sm border-b-2 ${activeTab === tab ? 'border-black text-black' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                  className={`py-4 px-1 font-medium text-sm border-b-2 transition-colors duration-200 ${
+                    activeTab === tab 
+                      ? 'border-black text-black' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
@@ -372,14 +365,14 @@ const ProductView = () => {
 
           <div className="py-8">
             {activeTab === 'description' && (
-              <div>
+              <div className="animate-fade-in">
                 <h3 className="text-lg font-medium">Product Description</h3>
                 <p className="mt-4 text-gray-600">{product.description}</p>
               </div>
             )}
 
             {activeTab === 'features' && (
-              <div>
+              <div className="animate-fade-in">
                 <h3 className="text-lg font-medium">Features & Details</h3>
                 <ul className="mt-4 space-y-2 text-gray-600">
                   {product.features.map((feature, index) => (
@@ -395,7 +388,7 @@ const ProductView = () => {
             )}
 
             {activeTab === 'reviews' && (
-              <div>
+              <div className="animate-fade-in">
                 <h3 className="text-lg font-medium">Customer Reviews</h3>
                 <div className="mt-6 space-y-6">
                   {[...Array(3)].map((_, i) => (
@@ -425,33 +418,58 @@ const ProductView = () => {
             )}
 
             {activeTab === 'care' && (
-              <div>
+              <div className="animate-fade-in">
                 <h3 className="text-lg font-medium">Care Instructions</h3>
                 <p className="mt-4 text-gray-600">{product.careInstructions}</p>
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
 
-        {/* Related Products (placeholder) */}
-        <motion.div variants={slideUp} className="mt-16">
+        {/* Related Products */}
+        <div className="mt-16 animate-slide-up">
           <h3 className="text-xl font-medium">You May Also Like</h3>
           <div className="grid grid-cols-2 gap-4 mt-6 md:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <motion.div 
+              <div 
                 key={i} 
-                className="p-4 transition-shadow bg-white rounded-lg shadow-sm hover:shadow-md"
-                whileHover={{ y: -5 }}
+                className="p-4 transition-all duration-200 bg-white rounded-lg shadow-sm hover:shadow-md hover:-translate-y-1"
               >
                 <div className="mb-3 bg-gray-100 rounded-md aspect-square"></div>
                 <h4 className="font-medium">Related Product {i + 1}</h4>
                 <p className="text-gray-600">$99.99</p>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-out;
+        }
+        
+        .animate-slide-up {
+          animation: slideUp 0.5s ease-out;
+        }
+      `}</style>
+    </div>
   );
 };
 
