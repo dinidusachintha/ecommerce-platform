@@ -251,18 +251,19 @@ const ProductView = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col pt-4 space-y-3">
-              <button
-                className="w-full py-4 font-semibold text-white transition-colors bg-black rounded-lg hover:bg-gray-800"
-              >
-                Add to Cart
-              </button>
-              <button
-                className="w-full py-4 font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
-              >
-                Buy Now
-              </button>
-            </div>
+<div className="flex flex-col pt-4 space-y-3">
+  <button
+    className="w-full py-4 font-semibold text-white transition-colors bg-black rounded-lg hover:bg-gray-800"
+  >
+    Add to Cart
+  </button>
+  <button
+    onClick={() => navigate('/checkout')}
+    className="w-full py-4 font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+  >
+    Buy Now
+  </button>
+</div>
 
             {/* Delivery Info */}
             <div className="p-4 rounded-lg bg-green-50">
