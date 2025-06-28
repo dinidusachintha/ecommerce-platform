@@ -2,57 +2,56 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
+import axios from 'axios';
 
 const Productlist = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 10;
 
-  // Mock data fetch - replace with actual API call
+  // Fetch products and categories
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        // Simulate API call
-        setTimeout(() => {
-          // Mock data - in a real app, this would come from your backend
-          const mockProducts = Array.from({ length: 25 }, (_, i) => ({
-            id: i + 1,
-            name: `Product ${i + 1}`,
-            price: (Math.random() * 100).toFixed(2),
-            category: ['women', 'men', 'kids'][Math.floor(Math.random() * 3)],
-            colors: ['Red', 'Blue', 'Green', 'Black'].slice(0, Math.floor(Math.random() * 3) + 1),
-            sizes: ['S', 'M', 'L', 'XL'].slice(0, Math.floor(Math.random() * 3) + 1),
-            description: `This is a detailed description for Product ${i + 1}`,
-            images: [
-              { url: 'https://via.placeholder.com/150' },
-              { url: 'https://via.placeholder.com/150' }
-            ]
-          }));
-          setProducts(mockProducts);
-          setLoading(false);
-        }, 1000);
+        setLoading(true);
+
+        // Fetch categories
+        const categoriesRes = await axios.get('/api/categories');
+        setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
+
+        // Fetch products
+        const productsRes = await axios.get('/api/products');
+        setProducts(Array.isArray(productsRes.data) ? productsRes.data : []);
+
+        setLoading(false);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching data:', error);
+        setError(error.message);
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     setDeleteId(id);
-    // Simulate delete confirmation
     if (window.confirm('Are you sure you want to delete this product?')) {
-      // In a real app, you would call your API here
-      setTimeout(() => {
-        setProducts(products.filter(product => product.id !== id));
+      try {
+        await axios.delete(`/api/products/${id}`);
+        setProducts(products.filter((product) => product._id !== id));
         setDeleteId(null);
-      }, 500);
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Failed to delete product.');
+        setDeleteId(null);
+      }
     } else {
       setDeleteId(null);
     }
@@ -66,10 +65,11 @@ const Productlist = () => {
     navigate(`/admin/products/view/${id}`);
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination logic
@@ -80,19 +80,23 @@ const Productlist = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  const getCategoryLabel = (value) => {
-    switch (value) {
-      case 'women': return "Women's Collection";
-      case 'men': return "Men's Collection";
-      case 'kids': return "Kids Collection";
-      default: return value;
-    }
+  const getCategoryLabel = (categoryId) => {
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category ? category.name : categoryId;
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-4 border-blue-500 rounded-full animate-spin border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-center text-red-500">
+        Error loading products: {error}
       </div>
     );
   }
@@ -138,25 +142,43 @@ const Productlist = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Product</th>
-                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Category</th>
-                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Price</th>
-                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Colors</th>
-                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Sizes</th>
-                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Product
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Price
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Colors
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Sizes
+                      </th>
+                      <th className="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {currentProducts.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50">
+                      <tr key={product._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 w-10 h-10">
-                              <img className="object-cover w-10 h-10 rounded" src={product.images[0]?.url} alt={product.name} />
+                              <img
+                                className="object-cover w-10 h-10 rounded"
+                                src={product.images[0]?.url}
+                                alt={product.name}
+                              />
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                              <div className="text-sm text-gray-500 line-clamp-1">{product.description}</div>
+                              <div className="text-sm text-gray-500 line-clamp-1">
+                                {product.description}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -169,7 +191,10 @@ const Productlist = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-wrap gap-1">
                             {product.colors.map((color, idx) => (
-                              <span key={idx} className="px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full">
+                              <span
+                                key={idx}
+                                className="px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full"
+                              >
                                 {color}
                               </span>
                             ))}
@@ -178,7 +203,10 @@ const Productlist = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-wrap gap-1">
                             {product.sizes.map((size, idx) => (
-                              <span key={idx} className="px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full">
+                              <span
+                                key={idx}
+                                className="px-2 py-1 text-xs text-gray-800 bg-gray-100 rounded-full"
+                              >
                                 {size}
                               </span>
                             ))}
@@ -187,26 +215,26 @@ const Productlist = () => {
                         <td className="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
                           <div className="flex justify-end space-x-2">
                             <button
-                              onClick={() => handleView(product.id)}
+                              onClick={() => handleView(product._id)}
                               className="p-2 text-blue-500 rounded-full hover:bg-blue-50"
                               title="View"
                             >
                               <FiEye className="w-5 h-5" />
                             </button>
                             <button
-                              onClick={() => handleEdit(product.id)}
+                              onClick={() => handleEdit(product._id)}
                               className="p-2 text-green-500 rounded-full hover:bg-green-50"
                               title="Edit"
                             >
                               <FiEdit className="w-5 h-5" />
                             </button>
                             <button
-                              onClick={() => handleDelete(product.id)}
+                              onClick={() => handleDelete(product._id)}
                               className="p-2 text-red-500 rounded-full hover:bg-red-50"
                               title="Delete"
-                              disabled={deleteId === product.id}
+                              disabled={deleteId === product._id}
                             >
-                              {deleteId === product.id ? (
+                              {deleteId === product._id ? (
                                 <div className="w-5 h-5 border-2 border-red-500 rounded-full animate-spin border-t-transparent"></div>
                               ) : (
                                 <FiTrash2 className="w-5 h-5" />
@@ -239,7 +267,6 @@ const Productlist = () => {
                       Previous
                     </button>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      // Show pages around current page
                       let pageNum;
                       if (totalPages <= 5) {
                         pageNum = i + 1;
@@ -254,7 +281,9 @@ const Productlist = () => {
                         <button
                           key={pageNum}
                           onClick={() => paginate(pageNum)}
-                          className={`px-3 py-1 text-sm rounded-md ${currentPage === pageNum ? 'bg-blue-500 text-white' : 'border border-gray-300'}`}
+                          className={`px-3 py-1 text-sm rounded-md ${
+                            currentPage === pageNum ? 'bg-blue-500 text-white' : 'border border-gray-300'
+                          }`}
                         >
                           {pageNum}
                         </button>
