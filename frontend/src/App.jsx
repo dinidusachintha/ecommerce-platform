@@ -3,7 +3,6 @@ import { Routes,Route } from 'react-router-dom'
 import Home from './Pages/Home'
 import About from './Pages/About'
 import Contact from './Pages/Contact'
-import Cart from './Pages/Cart'
 import Login from './Pages/Login'
 import Navbar from './Components/Navbar/Navbar'
 import ProductView from './Pages/Dinidu/ProductView'
@@ -11,7 +10,8 @@ import Checkout from './Pages/Checkout'
 import Producadd from './Pages/Dinidu/Productadd'
 import Productupdate from './Pages/Dinidu/Productupdate'
 import Productlist from './Pages/Dinidu/Productlist'
-import OrderConfirmation from './Pages/OrderConfirmation'
+import Cart from './Pages/Cart'
+
 
 
 const App = () => {
@@ -22,7 +22,6 @@ const App = () => {
         <Route path='/' element={<Home />} />
         <Route path='/about' element={<About />} />
         <Route path='/contact' element={<Contact />} />
-        <Route path='/cart' element={<Cart />} />
         <Route path='/login' element={<Login />} />
         <Route path="/product/:id" element={<ProductView />} />
         <Route path='/checkout' element={<Checkout />} />
@@ -30,8 +29,8 @@ const App = () => {
         <Route path='/productadd' element={<Producadd />} />
         <Route path='/productupdate' element={<Productupdate />} />
          <Route path='/productlist' element={<Productlist />} />
+        <Route path='/cart' element={<Cart/>} />
 
-        <Route path="/order-confirmation" element={<OrderConfirmation />} />
 
         </Routes>
     </div>
