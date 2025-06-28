@@ -522,7 +522,7 @@ const CategorySection = () => {
                   <button 
                     className="inline-block w-full mt-4 font-medium text-center text-pink-600 hover:text-pink-700"
                     onClick={() => {
-                      // navigate(`/product/${quickViewProduct.id}`); // Uncomment when router is available
+                      navigate(`/product/${quickViewProduct.id}`); // Uncomment when router is available
                       console.log('Navigate to product details');
                     }}
                   >
