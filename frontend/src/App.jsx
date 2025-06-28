@@ -10,7 +10,7 @@ import ProductView from './Pages/Dinidu/ProductView'
 import Checkout from './Pages/Checkout'
 import Producadd from './Pages/Dinidu/Productadd'
 import Productupdate from './Pages/Dinidu/Productupdate'
-import Productlist from './Pages/Dinidu/Productlist'
+
 
 
 const App = () => {
@@ -28,7 +28,7 @@ const App = () => {
 
         <Route path='/productadd' element={<Producadd />} />
         <Route path='/productupdate' element={<Productupdate />} />
-         <Route path='/productlist' element={<Productlist />} />
+        
 
 
 
