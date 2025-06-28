@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const [cart, setCart] = useState([]);
-  const [subtotal, setSubtotal] = useState(0);
-  const [shippingCost, setShippingCost] = useState(0);
-  const [tax, setTax] = useState(0);
-  const [total, setTotal] = useState(0);
+  const { 
+    cartItems, 
+    removeItem, 
+    updateQuantity,
+    subtotal,
+    shippingCost,
+    tax,
+    total,
+    clearCart
+  } = useCart();
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
@@ -35,47 +42,6 @@ const Checkout = () => {
   });
 
   const [errors, setErrors] = useState({});
-
-  // Load cart data (in a real app, this would come from your state management or API)
-  useEffect(() => {
-    const mockCart = [
-      {
-        id: 1,
-        name: "Premium Leather Jacket",
-        price: 299.99,
-        quantity: 1,
-        size: "M",
-        color: "Black",
-        image: "/images/jacket.jpg"
-      },
-      {
-        id: 2,
-        name: "Designer Sneakers",
-        price: 199.99,
-        quantity: 1,
-        size: "10",
-        color: "White",
-        image: "/images/sneakers.jpg"
-      }
-    ];
-    setCart(mockCart);
-  }, []);
-
-  // Calculate order summary
-  useEffect(() => {
-    const sub = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    setSubtotal(sub);
-    
-    // Calculate shipping (free over $100)
-    const shipping = sub >= 100 ? 0 : 9.99;
-    setShippingCost(shipping);
-    
-    // Calculate tax (simplified)
-    const taxAmount = sub * 0.08; // 8% tax
-    setTax(taxAmount);
-    
-    setTotal(sub + shipping + taxAmount);
-  }, [cart]);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -134,8 +100,8 @@ const Checkout = () => {
     setTimeout(() => {
       setIsProcessing(false);
       setOrderSuccess(true);
+      clearCart(); // Clear cart after successful order
       
-      // In a real app, you would redirect to order confirmation page
       setTimeout(() => {
         navigate('/order-confirmation');
       }, 2000);
@@ -181,20 +147,6 @@ const Checkout = () => {
     } else {
       handleChange(e);
     }
-  };
-
-  // Remove item from cart
-  const removeItem = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  };
-
-  // Update quantity
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return;
-    
-    setCart(prev => prev.map(item => 
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    ));
   };
 
   return (
@@ -610,8 +562,8 @@ const Checkout = () => {
             
             {/* Cart Items */}
             <div className="divide-y divide-gray-200">
-              {cart.map(item => (
-                <div key={item.id} className="flex py-4">
+              {cartItems.map(item => (
+                <div key={`${item.id}-${item.selectedSize}-${item.selectedColor}`} className="flex py-4">
                   <div className="flex-shrink-0">
                     <img
                       src={item.image}
@@ -626,7 +578,7 @@ const Checkout = () => {
                         <p className="ml-4">${item.price.toFixed(2)}</p>
                       </div>
                       <p className="mt-1 text-sm text-gray-500">
-                        {item.color} / {item.size}
+                        {item.selectedColor} / {item.selectedSize}
                       </p>
                     </div>
                     <div className="flex items-end justify-between flex-1 text-sm">

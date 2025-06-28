@@ -11,6 +11,7 @@ import Checkout from './Pages/Checkout'
 import Producadd from './Pages/Dinidu/Productadd'
 import Productupdate from './Pages/Dinidu/Productupdate'
 import Productlist from './Pages/Dinidu/Productlist'
+import OrderConfirmation from './Pages/OrderConfirmation'
 
 
 const App = () => {
@@ -30,7 +31,7 @@ const App = () => {
         <Route path='/productupdate' element={<Productupdate />} />
          <Route path='/productlist' element={<Productlist />} />
 
-
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
 
         </Routes>
     </div>
