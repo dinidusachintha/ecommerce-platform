@@ -129,7 +129,7 @@ const ProductAdd = () => {
       await axios.post('http://localhost:5000/api/products', formData, config);
       
       toast.success('Product added successfully!');
-      navigate('/admin/products');
+      navigate('/');
     } catch (error) {
       console.error('Error adding product:', error);
       toast.error(error.response?.data?.message || 'Failed to add product. Please try again.');

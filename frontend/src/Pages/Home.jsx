@@ -1,14 +1,17 @@
+// src/components/Home.js
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Heart } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const [activeCategory, setActiveCategory] = useState("women");
   const [isHovering, setIsHovering] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const categories = [
     {
@@ -141,9 +144,10 @@ const Home = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3 }}
                 whileHover={hoverScale}
-                className="relative overflow-hidden bg-white shadow-md rounded-xl group"
+                className="relative overflow-hidden bg-white shadow-md cursor-pointer rounded-xl group"
                 onMouseEnter={() => setIsHovering(product._id)}
                 onMouseLeave={() => setIsHovering(null)}
+                onClick={() => navigate(`/product/${product._id}`)}
               >
                 <div className="relative overflow-hidden h-80">
                   <img
@@ -157,10 +161,22 @@ const Home = () => {
                       animate={{ opacity: 1 }}
                       className="absolute flex flex-col gap-2 top-4 right-4"
                     >
-                      <button className="p-2 bg-white rounded-full shadow-md hover:bg-pink-50">
+                      <button 
+                        className="p-2 bg-white rounded-full shadow-md hover:bg-pink-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add to wishlist functionality
+                        }}
+                      >
                         <Heart className="w-5 h-5 text-gray-700" />
                       </button>
-                      <button className="p-2 bg-white rounded-full shadow-md hover:bg-pink-50">
+                      <button 
+                        className="p-2 bg-white rounded-full shadow-md hover:bg-pink-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add to cart functionality
+                        }}
+                      >
                         <ShoppingCart className="w-5 h-5 text-gray-700" />
                       </button>
                     </motion.div>
