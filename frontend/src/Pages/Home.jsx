@@ -10,7 +10,6 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Categories Data
   const categories = [
     {
       id: "women",
@@ -29,7 +28,6 @@ const Home = () => {
     }
   ];
 
-  // Fetch products when category changes
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -47,7 +45,6 @@ const Home = () => {
     fetchProducts();
   }, [activeCategory]);
 
-  // Animation Variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
@@ -60,7 +57,6 @@ const Home = () => {
 
   return (
     <div className="pt-24 bg-gray-50">
-      {/* Full-width Hero Banner */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -89,7 +85,6 @@ const Home = () => {
         </div>
       </motion.section>
 
-      {/* Category Navigation Tabs */}
       <motion.div
         variants={fadeIn}
         initial="hidden"
@@ -115,14 +110,12 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-pink-500 rounded-full border-t-transparent animate-spin"></div>
           </div>
         )}
 
-        {/* Products Grid */}
         <motion.div
           layout
           className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
@@ -152,14 +145,12 @@ const Home = () => {
                 onMouseEnter={() => setIsHovering(product._id)}
                 onMouseLeave={() => setIsHovering(null)}
               >
-                {/* Product Image */}
                 <div className="relative overflow-hidden h-80">
                   <img
                     src={`http://localhost:5000/${product.images[0]}`}
                     alt={product.name}
                     className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
                   />
-                  {/* Quick Actions */}
                   {isHovering === product._id && (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -176,7 +167,6 @@ const Home = () => {
                   )}
                 </div>
 
-                {/* Product Info */}
                 <div className="p-5">
                   <h3 className="mb-2 text-lg font-semibold">{product.name}</h3>
                   <p className="mb-3 text-sm text-gray-600 line-clamp-2">

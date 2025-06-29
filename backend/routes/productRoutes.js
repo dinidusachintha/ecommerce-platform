@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
-const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -25,7 +24,7 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: function (req, file, cb) {
     const filetypes = /jpeg|jpg|png|webp/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase();
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
 
     if (extname && mimetype) {
@@ -36,14 +35,11 @@ const upload = multer({
   }
 });
 
-// @desc    Create a new product
-// @route   POST /api/products
-// @access  Private/Admin
-router.post('/', protect, admin, upload.array('images', 5), async (req, res) => {
+// Create product
+router.post('/', upload.array('images', 5), async (req, res) => {
   try {
     const { name, price, description, category, colors, sizes } = req.body;
     
-    // Get uploaded images paths
     const images = req.files.map(file => file.path.replace(/\\/g, '/'));
 
     const product = new Product({
@@ -64,9 +60,7 @@ router.post('/', protect, admin, upload.array('images', 5), async (req, res) => 
   }
 });
 
-// @desc    Get all products
-// @route   GET /api/products
-// @access  Public
+// Get all products
 router.get('/', async (req, res) => {
   try {
     const category = req.query.category;
@@ -80,9 +74,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @desc    Get single product
-// @route   GET /api/products/:id
-// @access  Public
+// Get single product
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
