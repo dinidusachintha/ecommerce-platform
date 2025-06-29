@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Heart } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Home = () => {
   const [activeCategory, setActiveCategory] = useState("women");
   const [isHovering, setIsHovering] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Categories Data (Simplified - No Subcategories)
+  // Categories Data
   const categories = [
     {
       id: "women",
@@ -25,55 +29,23 @@ const Home = () => {
     }
   ];
 
-  // Products Data (Same as before)
-  const products = {
-    women: [
-      {
-        id: 1,
-        name: "Summer Dress",
-        price: 49.99,
-        originalPrice: 59.99,
-        image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        description: "A stylish and lightweight summer dress perfect for any occasion",
-        rating: 4.5,
-        reviews: 89,
-      },
-      {
-        id: 2,
-        name: "Elegant Heels",
-        price: 79.99,
-        originalPrice: 99.99,
-        image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        description: "Classic high heels for a sophisticated look",
-        rating: 4.2,
-        reviews: 45,
+  // Fetch products when category changes
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`http://localhost:5000/api/products?category=${activeCategory}`);
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        toast.error('Failed to load products');
+      } finally {
+        setLoading(false);
       }
-    ],
-    men: [
-      {
-        id: 3,
-        name: "Classic Watch",
-        price: 129.99,
-        originalPrice: 149.99,
-        image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        description: "Minimalist watch for everyday elegance",
-        rating: 4.7,
-        reviews: 120,
-      }
-    ],
-    kids: [
-      {
-        id: 4,
-        name: "Cotton Onesie",
-        price: 24.99,
-        originalPrice: 29.99,
-        image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        description: "Soft and comfortable for babies",
-        rating: 4.8,
-        reviews: 65,
-      }
-    ]
-  };
+    };
+
+    fetchProducts();
+  }, [activeCategory]);
 
   // Animation Variants
   const fadeIn = {
@@ -143,15 +115,33 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-4 border-pink-500 rounded-full border-t-transparent animate-spin"></div>
+          </div>
+        )}
+
         {/* Products Grid */}
         <motion.div
           layout
           className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           <AnimatePresence>
-            {products[activeCategory]?.map((product) => (
+            {!loading && products.length === 0 && (
               <motion.div
-                key={product.id}
+                className="py-12 text-center col-span-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <h3 className="text-xl font-medium text-gray-700">No products found</h3>
+                <p className="text-gray-500">Check back later or try another category</p>
+              </motion.div>
+            )}
+
+            {products.map((product) => (
+              <motion.div
+                key={product._id}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -159,18 +149,18 @@ const Home = () => {
                 transition={{ duration: 0.3 }}
                 whileHover={hoverScale}
                 className="relative overflow-hidden bg-white shadow-md rounded-xl group"
-                onMouseEnter={() => setIsHovering(product.id)}
+                onMouseEnter={() => setIsHovering(product._id)}
                 onMouseLeave={() => setIsHovering(null)}
               >
                 {/* Product Image */}
                 <div className="relative overflow-hidden h-80">
                   <img
-                    src={product.image}
+                    src={`http://localhost:5000/${product.images[0]}`}
                     alt={product.name}
                     className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
                   />
                   {/* Quick Actions */}
-                  {isHovering === product.id && (
+                  {isHovering === product._id && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -197,16 +187,11 @@ const Home = () => {
                       <span className="text-lg font-bold text-pink-600">
                         ${product.price.toFixed(2)}
                       </span>
-                      {product.originalPrice > product.price && (
-                        <span className="ml-2 text-sm text-gray-400 line-through">
-                          ${product.originalPrice.toFixed(2)}
-                        </span>
-                      )}
                     </div>
                     <div className="flex items-center">
                       <span className="text-yellow-400">★★★★☆</span>
                       <span className="ml-1 text-sm text-gray-500">
-                        ({product.reviews})
+                        ({product.reviews || 0})
                       </span>
                     </div>
                   </div>

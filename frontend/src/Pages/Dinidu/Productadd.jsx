@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { ShoppingBag, X, Plus, Upload } from 'lucide-react';
+import { X, Plus, Upload, ShoppingBag } from 'lucide-react';
 
 const ProductAdd = () => {
   const navigate = useNavigate();
@@ -30,11 +29,16 @@ const ProductAdd = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!product.name.trim()) newErrors.name = 'Product name is required';
-    if (!product.price || isNaN(product.price) || product.price <= 0) newErrors.price = 'Valid price is required';
-    if (!product.description.trim()) newErrors.description = 'Description is required';
-    if (product.colors.length === 0) newErrors.colors = 'At least one color is required';
-    if (product.sizes.length === 0) newErrors.sizes = 'At least one size is required';
-    if (selectedImages.length === 0) newErrors.images = 'At least one image is required';
+    if (!product.price || isNaN(product.price) || product.price <= 0) 
+      newErrors.price = 'Valid price is required';
+    if (!product.description.trim()) 
+      newErrors.description = 'Description is required';
+    if (product.colors.length === 0) 
+      newErrors.colors = 'At least one color is required';
+    if (product.sizes.length === 0) 
+      newErrors.sizes = 'At least one size is required';
+    if (selectedImages.length === 0) 
+      newErrors.images = 'At least one image is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -122,7 +126,7 @@ const ProductAdd = () => {
         }
       };
 
-      const { data } = await axios.post('/api/products', formData, config);
+      await axios.post('http://localhost:5000/api/products', formData, config);
       
       toast.success('Product added successfully!');
       navigate('/admin/products');
@@ -136,12 +140,7 @@ const ProductAdd = () => {
 
   return (
     <div className="container px-4 py-8 mx-auto">
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-4xl mx-auto"
-      >
+      <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">Add New Product</h1>
           <button 
@@ -337,19 +336,17 @@ const ProductAdd = () => {
 
           {/* Submit Button */}
           <div className="flex justify-end">
-            <motion.button
+            <button
               type="submit"
-              className="flex items-center px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="flex items-center px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600 disabled:opacity-50"
               disabled={isSubmitting}
             >
               <ShoppingBag className="w-5 h-5 mr-2" />
               {isSubmitting ? 'Saving...' : 'Save Product'}
-            </motion.button>
+            </button>
           </div>
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 };
