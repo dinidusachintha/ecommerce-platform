@@ -253,13 +253,14 @@ const ProductView = () => {
             {/* Action Buttons */}
 <div className="flex flex-col pt-4 space-y-3">
   <button
-    className="w-full py-4 font-semibold text-white transition-colors bg-black rounded-lg hover:bg-gray-800"
+    onClick={() => navigate('/cart')}
+    className="w-full py-4 font-semibold text-white transition-colors bg-pink-600 rounded-lg hover:bg-pink-700"
   >
     Add to Cart
   </button>
   <button
     onClick={() => navigate('/checkout')}
-    className="w-full py-4 font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+    className="w-full py-4 font-semibold text-white transition-colors bg-pink-600 rounded-lg hover:bg-pink-700"
   >
     Buy Now
   </button>

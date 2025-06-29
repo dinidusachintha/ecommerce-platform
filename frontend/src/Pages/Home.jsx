@@ -1,256 +1,221 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X, Plus, Minus, Eye, ShoppingCart, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShoppingCart, Heart } from 'lucide-react';
 
 const Home = () => {
   const [activeCategory, setActiveCategory] = useState("women");
-  const [cart, setCart] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
-  const [isMobile, setIsMobile] = useState(false);
-  const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [showAddedNotification, setShowAddedNotification] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const navigate = useNavigate();
+  const [isHovering, setIsHovering] = useState(null);
 
-  // Check screen size
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
+  // Categories Data (Simplified - No Subcategories)
   const categories = [
     {
       id: "women",
       name: "Women's Collection",
-      banner: "https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      subcategories: [
-        { name: "Dresses", icon: "👗" },
-        { name: "Shoes", icon: "👠" }, 
-        { name: "Bags", icon: "👜" },
-        { name: "Accessories", icon: "💍" }
-      ]
+      banner: "https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1800&q=80"
     },
     {
       id: "men",
       name: "Men's Collection",
-      banner: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      subcategories: [
-        { name: "Shirts", icon: "👔" },
-        { name: "Shoes", icon: "👞" },
-        { name: "Watches", icon: "⌚" },
-        { name: "Bags", icon: "💼" }
-      ]
+      banner: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1800&q=80"
     },
     {
       id: "kids",
       name: "Kids Collection",
-      banner: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      subcategories: [
-        { name: "Clothing", icon: "👶" },
-        { name: "Shoes", icon: "👟" },
-        { name: "Toys", icon: "🧸" },
-        { name: "Accessories", icon: "🧦" }
-      ]
+      banner: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1800&q=80"
     }
   ];
 
+  // Products Data (Same as before)
   const products = {
     women: [
-      { 
-        id: 1, 
-        name: "Summer Dress", 
-        price: 49.99, 
+      {
+        id: 1,
+        name: "Summer Dress",
+        price: 49.99,
         originalPrice: 59.99,
-        image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", 
+        image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         description: "A stylish and lightweight summer dress perfect for any occasion",
-        colors: ["Pink", "Blue", "White"],
-        sizes: ["S", "M", "L", "XL"],
         rating: 4.5,
-        reviews: 89
+        reviews: 89,
       },
-      // ... other women's products
+      {
+        id: 2,
+        name: "Elegant Heels",
+        price: 79.99,
+        originalPrice: 99.99,
+        image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        description: "Classic high heels for a sophisticated look",
+        rating: 4.2,
+        reviews: 45,
+      }
     ],
     men: [
-      // ... men's products
+      {
+        id: 3,
+        name: "Classic Watch",
+        price: 129.99,
+        originalPrice: 149.99,
+        image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        description: "Minimalist watch for everyday elegance",
+        rating: 4.7,
+        reviews: 120,
+      }
     ],
     kids: [
-      // ... kids' products
+      {
+        id: 4,
+        name: "Cotton Onesie",
+        price: 24.99,
+        originalPrice: 29.99,
+        image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        description: "Soft and comfortable for babies",
+        rating: 4.8,
+        reviews: 65,
+      }
     ]
   };
 
-  // Add to cart functionality
-  const addToCart = (product) => {
-    const existingItem = cart.find(item => 
-      item.id === product.id && 
-      item.color === product.color && 
-      item.size === product.size
-    );
-    
-    if (existingItem) {
-      setCart(cart.map(item =>
-        item.id === product.id && 
-        item.color === product.color && 
-        item.size === product.size
-          ? { ...item, quantity: item.quantity + (product.quantity || 1) }
-          : item
-      ));
-    } else {
-      setCart([...cart, { 
-        ...product, 
-        quantity: product.quantity || 1 
-      }]);
-    }
+  // Animation Variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
 
-  // Toggle wishlist
-  const toggleWishlist = (productId) => {
-    setWishlist(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
-  };
-
-  // Open quick view
-  const openQuickView = (product) => {
-    setQuickViewProduct({
-      ...product,
-      selectedColor: product.colors[0],
-      selectedSize: product.sizes[0],
-      quantity: 1
-    });
-  };
-
-  // Render star rating
-  const renderStars = (rating) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={`text-sm ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}`}>
-        ★
-      </span>
-    ));
-  };
-
-  // Product card component
-  const ProductCard = ({ product }) => {
-    const navigate = useNavigate();
-
-    const handleCardClick = () => {
-      navigate(`/product/${product.id}`);
-    };
-
-    return (
-      <div className="relative overflow-hidden transition-all duration-300 bg-white rounded-lg shadow-md group hover:shadow-xl">
-        {/* Product image with click handler */}
-        <div className="relative overflow-hidden cursor-pointer" onClick={handleCardClick}>
-          <img
-            src={product.image}
-            alt={product.name}
-            className="object-cover w-full h-64 transition-transform duration-300 group-hover:scale-105"
-          />
-        </div>
-
-        {/* Product info */}
-        <div className="p-4 cursor-pointer" onClick={handleCardClick}>
-          <h3 className="mb-2 text-lg font-semibold text-gray-800 line-clamp-1">{product.name}</h3>
-          <p className="mb-2 text-sm text-gray-600 line-clamp-2">{product.description}</p>
-          
-          {/* Rating */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex">{renderStars(product.rating)}</div>
-            <span className="text-sm text-gray-500">({product.reviews})</span>
-          </div>
-
-          {/* Price */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xl font-bold text-pink-600">${product.price.toFixed(2)}</span>
-            {product.originalPrice > product.price && (
-              <span className="text-sm text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-            )}
-          </div>
-        </div>
-
-        {/* Add to cart button */}
-        <div className="p-4 pt-0">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              addToCart(product);
-            }}
-            className="flex items-center justify-center w-full gap-2 px-4 py-2 text-white transition-colors duration-200 bg-pink-600 rounded-lg hover:bg-pink-700"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            Add to Cart
-          </button>
-        </div>
-      </div>
-    );
+  const hoverScale = {
+    scale: 1.03,
+    transition: { type: "spring", stiffness: 300 }
   };
 
   return (
-    <div className="py-12 bg-gray-50">
-      <div className="container px-4 mx-auto">
-        {/* Section Header */}
-        <div className="mb-12 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-gray-800">Shop by Category</h2>
-          <p className="text-lg text-gray-600">Discover our latest collections across all categories</p>
+    <div className="pt-24 bg-gray-50">
+      {/* Full-width Hero Banner */}
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative h-[60vh] w-full overflow-hidden"
+      >
+        <img
+          src={categories.find(cat => cat.id === activeCategory)?.banner}
+          alt="Banner"
+          className="object-cover w-full h-full"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="px-4 text-center text-white"
+          >
+            <h1 className="mb-4 text-4xl font-bold md:text-5xl">
+              {categories.find(cat => cat.id === activeCategory)?.name}
+            </h1>
+            <p className="max-w-2xl mx-auto mb-6 text-lg md:text-xl">
+              Discover our curated collection
+            </p>
+          </motion.div>
         </div>
+      </motion.section>
 
-        {/* Category Navigation */}
-        <div className="flex justify-center mb-8">
+      {/* Category Navigation Tabs */}
+      <motion.div
+        variants={fadeIn}
+        initial="hidden"
+        animate="visible"
+        className="container px-4 py-12 mx-auto"
+      >
+        <div className="flex justify-center mb-12">
           <div className="flex p-1 bg-white rounded-lg shadow-md">
             {categories.map((category) => (
-              <button
+              <motion.button
                 key={category.id}
+                whileHover={{ scale: 1.05 }}
                 onClick={() => setActiveCategory(category.id)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
                   activeCategory === category.id
                     ? 'bg-pink-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50'
+                    : 'text-gray-600 hover:bg-pink-50'
                 }`}
               >
                 {category.name}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
 
-        {/* Active Category Banner */}
-        <div className="mb-12 overflow-hidden bg-white rounded-lg shadow-lg">
-          <div className="relative h-64 md:h-80">
-            <img
-              src={categories.find(cat => cat.id === activeCategory)?.banner}
-              alt={categories.find(cat => cat.id === activeCategory)?.name}
-              className="object-cover w-full h-full"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-              <div className="text-center text-white">
-                <h3 className="mb-4 text-3xl font-bold md:text-4xl">
-                  {categories.find(cat => cat.id === activeCategory)?.name}
-                </h3>
-                <div className="flex justify-center gap-4">
-                  {categories.find(cat => cat.id === activeCategory)?.subcategories.map((sub) => (
-                    <div key={sub.name} className="flex items-center gap-2 px-3 py-1 bg-white rounded-full bg-opacity-20">
-                      <span className="text-lg">{sub.icon}</span>
-                      <span className="text-sm font-medium">{sub.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Products Grid */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {products[activeCategory]?.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </div>
+        <motion.div
+          layout
+          className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          <AnimatePresence>
+            {products[activeCategory]?.map((product) => (
+              <motion.div
+                key={product.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+                whileHover={hoverScale}
+                className="relative overflow-hidden bg-white shadow-md rounded-xl group"
+                onMouseEnter={() => setIsHovering(product.id)}
+                onMouseLeave={() => setIsHovering(null)}
+              >
+                {/* Product Image */}
+                <div className="relative overflow-hidden h-80">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+                  />
+                  {/* Quick Actions */}
+                  {isHovering === product.id && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="absolute flex flex-col gap-2 top-4 right-4"
+                    >
+                      <button className="p-2 bg-white rounded-full shadow-md hover:bg-pink-50">
+                        <Heart className="w-5 h-5 text-gray-700" />
+                      </button>
+                      <button className="p-2 bg-white rounded-full shadow-md hover:bg-pink-50">
+                        <ShoppingCart className="w-5 h-5 text-gray-700" />
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Product Info */}
+                <div className="p-5">
+                  <h3 className="mb-2 text-lg font-semibold">{product.name}</h3>
+                  <p className="mb-3 text-sm text-gray-600 line-clamp-2">
+                    {product.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-lg font-bold text-pink-600">
+                        ${product.price.toFixed(2)}
+                      </span>
+                      {product.originalPrice > product.price && (
+                        <span className="ml-2 text-sm text-gray-400 line-through">
+                          ${product.originalPrice.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-yellow-400">★★★★☆</span>
+                      <span className="ml-1 text-sm text-gray-500">
+                        ({product.reviews})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
