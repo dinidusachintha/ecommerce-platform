@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { ShoppingBag, X, Plus, Upload } from 'lucide-react';
 
-const Productadd = () => {
+const ProductAdd = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState({
     name: '',
@@ -11,11 +14,10 @@ const Productadd = () => {
     category: 'women',
     colors: [],
     sizes: [],
-    images: []
   });
   const [newColor, setNewColor] = useState('');
   const [newSize, setNewSize] = useState('');
-  const [imagePreviews, setImagePreviews] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -28,11 +30,11 @@ const Productadd = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!product.name.trim()) newErrors.name = 'Product name is required';
-    if (!product.price || isNaN(product.price)) newErrors.price = 'Valid price is required';
+    if (!product.price || isNaN(product.price) || product.price <= 0) newErrors.price = 'Valid price is required';
     if (!product.description.trim()) newErrors.description = 'Description is required';
     if (product.colors.length === 0) newErrors.colors = 'At least one color is required';
     if (product.sizes.length === 0) newErrors.sizes = 'At least one size is required';
-    if (imagePreviews.length === 0) newErrors.images = 'At least one image is required';
+    if (selectedImages.length === 0) newErrors.images = 'At least one image is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -76,48 +78,60 @@ const Productadd = () => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + imagePreviews.length > 5) {
-      alert('Maximum 5 images allowed');
+    if (files.length + selectedImages.length > 5) {
+      toast.error('Maximum 5 images allowed');
       return;
     }
-
-    const newImagePreviews = files.map(file => ({
-      name: file.name,
-      url: URL.createObjectURL(file)
-    }));
-
-    setImagePreviews([...imagePreviews, ...newImagePreviews]);
+    
+    setSelectedImages([...selectedImages, ...files]);
     if (errors.images) setErrors({ ...errors, images: '' });
   };
 
   const handleRemoveImage = (index) => {
-    const updatedPreviews = [...imagePreviews];
-    updatedPreviews.splice(index, 1);
-    setImagePreviews(updatedPreviews);
+    const updatedImages = [...selectedImages];
+    updatedImages.splice(index, 1);
+    setSelectedImages(updatedImages);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     
-    // In a real app, you would upload images to a server here
-    // and get back the image URLs to include in the product data
-    
-    const productData = {
-      ...product,
-      price: parseFloat(product.price),
-      images: imagePreviews.map(img => img.url) // Replace with actual image URLs from your server
-    };
+    try {
+      const formData = new FormData();
+      
+      // Append product data
+      formData.append('name', product.name);
+      formData.append('price', product.price);
+      formData.append('description', product.description);
+      formData.append('category', product.category);
+      product.colors.forEach(color => formData.append('colors', color));
+      product.sizes.forEach(size => formData.append('sizes', size));
+      
+      // Append images
+      selectedImages.forEach(image => {
+        formData.append('images', image);
+      });
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Product data to submit:', productData);
-      setIsSubmitting(false);
-      alert('Product added successfully!');
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      };
+
+      const { data } = await axios.post('/api/products', formData, config);
+      
+      toast.success('Product added successfully!');
       navigate('/admin/products');
-    }, 1500);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast.error(error.response?.data?.message || 'Failed to add product. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -132,9 +146,9 @@ const Productadd = () => {
           <h1 className="text-2xl font-bold">Add New Product</h1>
           <button 
             onClick={() => navigate('/admin/products')}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+            className="flex items-center px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
           >
-            Back to Products
+            <X className="w-5 h-5 mr-1" /> Cancel
           </button>
         </div>
 
@@ -218,7 +232,7 @@ const Productadd = () => {
                     onClick={() => handleRemoveColor(color)}
                     className="ml-2 text-red-500 hover:text-red-700"
                   >
-                    ×
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               ))}
@@ -232,13 +246,14 @@ const Productadd = () => {
                 onChange={(e) => setNewColor(e.target.value)}
                 className="flex-1 p-3 border border-gray-300 rounded-lg"
                 placeholder="Add color (e.g. Red)"
+                onKeyPress={(e) => e.key === 'Enter' && handleAddColor()}
               />
               <button
                 type="button"
                 onClick={handleAddColor}
-                className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+                className="flex items-center px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
               >
-                Add
+                <Plus className="w-5 h-5 mr-1" /> Add
               </button>
             </div>
           </div>
@@ -255,7 +270,7 @@ const Productadd = () => {
                     onClick={() => handleRemoveSize(size)}
                     className="ml-2 text-red-500 hover:text-red-700"
                   >
-                    ×
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               ))}
@@ -269,13 +284,14 @@ const Productadd = () => {
                 onChange={(e) => setNewSize(e.target.value)}
                 className="flex-1 p-3 border border-gray-300 rounded-lg"
                 placeholder="Add size (e.g. M or 10)"
+                onKeyPress={(e) => e.key === 'Enter' && handleAddSize()}
               />
               <button
                 type="button"
                 onClick={handleAddSize}
-                className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+                className="flex items-center px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
               >
-                Add
+                <Plus className="w-5 h-5 mr-1" /> Add
               </button>
             </div>
           </div>
@@ -286,10 +302,10 @@ const Productadd = () => {
             {errors.images && <p className="mt-1 text-sm text-red-500">{errors.images}</p>}
             
             <div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3 md:grid-cols-4">
-              {imagePreviews.map((image, index) => (
+              {selectedImages.map((image, index) => (
                 <div key={index} className="relative group">
                   <img 
-                    src={image.url} 
+                    src={URL.createObjectURL(image)} 
                     alt={image.name} 
                     className="object-cover w-full h-32 rounded-lg"
                   />
@@ -298,12 +314,12 @@ const Productadd = () => {
                     onClick={() => handleRemoveImage(index)}
                     className="absolute p-1 text-white bg-red-500 rounded-full opacity-0 top-1 right-1 group-hover:opacity-100"
                   >
-                    ×
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               ))}
               
-              {imagePreviews.length < 5 && (
+              {selectedImages.length < 5 && (
                 <label className="flex flex-col items-center justify-center h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-gray-400">
                   <input 
                     type="file" 
@@ -312,9 +328,7 @@ const Productadd = () => {
                     onChange={handleImageUpload}
                     className="hidden"
                   />
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
+                  <Upload className="w-8 h-8 text-gray-400" />
                   <span className="mt-2 text-sm text-gray-500">Upload (max 5)</span>
                 </label>
               )}
@@ -325,11 +339,12 @@ const Productadd = () => {
           <div className="flex justify-end">
             <motion.button
               type="submit"
-              className="px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600"
+              className="flex items-center px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               disabled={isSubmitting}
             >
+              <ShoppingBag className="w-5 h-5 mr-2" />
               {isSubmitting ? 'Saving...' : 'Save Product'}
             </motion.button>
           </div>
@@ -339,4 +354,4 @@ const Productadd = () => {
   );
 };
 
-export default Productadd;
+export default ProductAdd;
