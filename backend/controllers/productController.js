@@ -2,13 +2,21 @@ const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
 // Helper function to save files
 const saveFiles = (files) => {
   return files.map(file => {
+    // Create uploads directory if it doesn't exist
+    const uploadDir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
     // Create a new filename to prevent conflicts
-    const newFilename = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
-    const filePath = path.join(__dirname, '../uploads', newFilename);
+    const fileExt = path.extname(file.originalname);
+    const newFilename = `${uuidv4()}${fileExt}`;
+    const filePath = path.join(uploadDir, newFilename);
     
     // Move the file to uploads directory
     fs.renameSync(file.path, filePath);
@@ -17,6 +25,66 @@ const saveFiles = (files) => {
     return `/uploads/${newFilename}`;
   });
 };
+
+// @desc    Create a product
+// @route   POST /api/products
+// @access  Private/Admin
+const createProduct = asyncHandler(async (req, res) => {
+  try {
+    const { name, price, description, category, colors, sizes } = req.body;
+
+    if (!req.files || req.files.length === 0) {
+      res.status(400);
+      throw new Error('Please upload at least one image');
+    }
+
+    // Validate required fields
+    if (!name || !price || !description || !category) {
+      res.status(400);
+      throw new Error('Please fill all required fields');
+    }
+
+    // Validate colors and sizes are arrays
+    const colorsArray = Array.isArray(colors) ? colors : [colors].filter(Boolean);
+    const sizesArray = Array.isArray(sizes) ? sizes : [sizes].filter(Boolean);
+
+    if (colorsArray.length === 0) {
+      res.status(400);
+      throw new Error('Please add at least one color');
+    }
+
+    if (sizesArray.length === 0) {
+      res.status(400);
+      throw new Error('Please add at least one size');
+    }
+
+    const imageUrls = saveFiles(req.files);
+
+    const product = new Product({
+      name,
+      price,
+      description,
+      category,
+      colors: colorsArray,
+      sizes: sizesArray,
+      images: imageUrls,
+      user: req.user._id
+    });
+
+    const createdProduct = await product.save();
+    res.status(201).json(createdProduct);
+  } catch (error) {
+    // Delete any uploaded files if there was an error
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      });
+    }
+    throw error;
+  }
+});
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -61,34 +129,6 @@ const getProductById = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Create a product
-// @route   POST /api/products
-// @access  Private/Admin
-const createProduct = asyncHandler(async (req, res) => {
-  const { name, price, description, category, colors, sizes } = req.body;
-
-  if (!req.files || req.files.length === 0) {
-    res.status(400);
-    throw new Error('Please upload at least one image');
-  }
-
-  const imageUrls = saveFiles(req.files);
-
-  const product = new Product({
-    name,
-    price,
-    description,
-    category,
-    colors: Array.isArray(colors) ? colors : [colors],
-    sizes: Array.isArray(sizes) ? sizes : [sizes],
-    images: imageUrls,
-    user: req.user._id
-  });
-
-  const createdProduct = await product.save();
-  res.status(201).json(createdProduct);
-});
-
 // @desc    Update a product
 // @route   PUT /api/products/:id
 // @access  Private/Admin
@@ -123,12 +163,16 @@ const updateProduct = asyncHandler(async (req, res) => {
     imageUrls = imageUrls.filter(img => !req.body.deletedImages.includes(img));
   }
 
-  product.name = name;
-  product.price = price;
-  product.description = description;
-  product.category = category;
-  product.colors = Array.isArray(colors) ? colors : [colors];
-  product.sizes = Array.isArray(sizes) ? sizes : [sizes];
+  // Validate colors and sizes are arrays
+  const colorsArray = Array.isArray(colors) ? colors : [colors].filter(Boolean);
+  const sizesArray = Array.isArray(sizes) ? sizes : [sizes].filter(Boolean);
+
+  product.name = name || product.name;
+  product.price = price || product.price;
+  product.description = description || product.description;
+  product.category = category || product.category;
+  product.colors = colorsArray.length > 0 ? colorsArray : product.colors;
+  product.sizes = sizesArray.length > 0 ? sizesArray : product.sizes;
   product.images = imageUrls;
 
   const updatedProduct = await product.save();
