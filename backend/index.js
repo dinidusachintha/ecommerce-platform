@@ -27,8 +27,6 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 
 // MongoDB connection with improved configuration
 mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
 })
 .then(() => console.log('MongoDB connected successfully'))
@@ -61,8 +59,11 @@ process.on('SIGINT', async () => {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
+console.log('Before requiring routes');
 app.use('/api/products', require('./routes/productRoutes'));
-app.use('/api/users', require('./routes/userRoutes')); // Example for user management
+console.log('After productRoutes');
+app.use('/api/users', require('./routes/userRoutes'));
+console.log('After userRoutes');
 
 // Health check endpoint
 app.get('/health', (req, res) => {
