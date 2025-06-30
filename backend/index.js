@@ -62,6 +62,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 console.log('Before requiring routes');
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/auth', require('./routes/authRoutes')); // Re-added auth routes
 console.log('After requiring routes');
 
 // Health check endpoint
