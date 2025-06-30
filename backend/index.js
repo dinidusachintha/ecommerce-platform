@@ -62,7 +62,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/products', require('./routes/productRoutes'));
-app.use('/api/auth', require('./routes/authRoutes')); // Example for future auth
 app.use('/api/users', require('./routes/userRoutes')); // Example for user management
 
 // Health check endpoint
