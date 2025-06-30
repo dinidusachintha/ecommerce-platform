@@ -1,45 +1,107 @@
 // Import required packages
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config(); // Load environment variables from .env file
-const cors = require('cors'); // For handling CORS with frontend
+require('dotenv').config();
+const cors = require('cors');
+const path = require('path');
+const morgan = require('morgan');
 
 // Initialize Express app
 const app = express();
 
 // Middleware
-app.use(express.json()); // Parse JSON request bodies
+app.use(express.json({ limit: '10mb' })); // Increased payload limit
+app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Allow requests from your frontend
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true // Enable credentials for cookies/sessions
 }));
 
-// Load environment variables
-const mongoURI = process.env.MONGODB_URI;
+// Logging middleware
+app.use(morgan('dev'));
+
+// Load environment variables with defaults
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce';
 const port = process.env.PORT || 5000;
+const nodeEnv = process.env.NODE_ENV || 'development';
 
-// Debug: Log the MongoDB URI to ensure it's loaded correctly
-console.log('Mongo URI:', mongoURI);
+// MongoDB connection with improved configuration
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+})
+.then(() => console.log('MongoDB connected successfully'))
+.catch((err) => {
+  console.error('MongoDB connection error:', err.message);
+  process.exit(1);
+});
 
-// Check if MongoDB URI is defined
-if (!mongoURI) {
-  console.error('Error: MONGODB_URI is undefined. Please check your .env file.');
-  process.exit(1); // Exit the process if URI is not defined
-}
+// MongoDB connection events for better debugging
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose connected to DB');
+});
 
-// MongoDB connection (removed deprecated options)
-mongoose.connect(mongoURI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch((err) => {
-    console.error('MongoDB connection error:', err.message);
-    process.exit(1); // Exit on connection failure
+mongoose.connection.on('error', (err) => {
+  console.error('Mongoose connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('Mongoose disconnected');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  console.log('Mongoose connection closed due to app termination');
+  process.exit(0);
+});
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Routes
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/auth', require('./routes/authRoutes')); // Example for future auth
+app.use('/api/users', require('./routes/userRoutes')); // Example for user management
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    database: mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED',
+    environment: nodeEnv
   });
+});
 
-// Basic route for testing
-app.get('/', (req, res) => {
-  res.json({ message: 'Backend server is running!' });
+// 404 Handler
+app.use((req, res, next) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
+    message: err.message || 'Internal Server Error',
+    ...(nodeEnv === 'development' && { stack: err.stack })
+  });
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+const server = app.listen(port, () => {
+  console.log(`Server running in ${nodeEnv} mode on port ${port}`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+  server.close(() => process.exit(1));
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  server.close(() => process.exit(1));
 });
