@@ -4,6 +4,18 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { X, Plus, Upload, ShoppingBag } from 'lucide-react';
 
+// Configure axios instance (simple version)
+const api = axios.create({
+  baseURL: 'http://localhost:5000/api', // Replace with your actual API URL
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 const ProductAdd = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState({
@@ -87,7 +99,19 @@ const ProductAdd = () => {
       return;
     }
     
-    setSelectedImages([...selectedImages, ...files]);
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`File ${file.name} is not an image`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`File ${file.name} is too large (max 5MB)`);
+        return false;
+      }
+      return true;
+    });
+    
+    setSelectedImages([...selectedImages, ...validFiles]);
     if (errors.images) setErrors({ ...errors, images: '' });
   };
 
@@ -119,20 +143,31 @@ const ProductAdd = () => {
         formData.append('images', image);
       });
 
-      const config = {
+      const response = await api.post('/products', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'multipart/form-data'
         }
-      };
-
-      await axios.post('http://localhost:5000/api/products', formData, config);
+      });
       
       toast.success('Product added successfully!');
-      navigate('/');
+      navigate('/admin/products');
     } catch (error) {
-      console.error('Error adding product:', error);
-      toast.error(error.response?.data?.message || 'Failed to add product. Please try again.');
+      console.error('Error:', error);
+      let errorMessage = 'Failed to add product. Please try again.';
+      
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = 'Unauthorized - Please login again';
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data?.error) {
+          errorMessage = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

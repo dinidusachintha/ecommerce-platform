@@ -1,18 +1,18 @@
-// src/components/Home.js
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Heart } from 'lucide-react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Home = () => {
   const [activeCategory, setActiveCategory] = useState("women");
   const [isHovering, setIsHovering] = useState(null);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState({ women: [], men: [], kids: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Categories Data
   const categories = [
     {
       id: "women",
@@ -31,23 +31,39 @@ const Home = () => {
     }
   ];
 
+  // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/products?category=${activeCategory}`);
-        setProducts(response.data);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        toast.error('Failed to load products');
+        const response = await axios.get('http://localhost:5000/api/products');
+        
+        // Organize products by category
+        const productsByCategory = {
+          women: response.data.filter(product => product.category === 'women'),
+          men: response.data.filter(product => product.category === 'men'),
+          kids: response.data.filter(product => product.category === 'kids')
+        };
+        
+        setProducts(productsByCategory);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [activeCategory]);
+  }, []);
 
+  // Handle product click
+  const handleProductClick = (productId) => {
+    navigate(`/products/${productId}`);
+  };
+
+  // Animation Variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
@@ -58,8 +74,31 @@ const Home = () => {
     transition: { type: "spring", stiffness: 300 }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen pt-24">
+        <div className="w-8 h-8 border-4 border-pink-500 rounded-full border-t-transparent animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen pt-24">
+        <p className="mb-4 text-lg text-gray-700">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 text-white bg-pink-600 rounded-lg hover:bg-pink-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-24 bg-gray-50">
+      {/* Full-width Hero Banner */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -88,6 +127,7 @@ const Home = () => {
         </div>
       </motion.section>
 
+      {/* Category Navigation Tabs */}
       <motion.div
         variants={fadeIn}
         initial="hidden"
@@ -113,29 +153,13 @@ const Home = () => {
           </div>
         </div>
 
-        {loading && (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-pink-500 rounded-full border-t-transparent animate-spin"></div>
-          </div>
-        )}
-
+        {/* Products Grid */}
         <motion.div
           layout
           className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           <AnimatePresence>
-            {!loading && products.length === 0 && (
-              <motion.div
-                className="py-12 text-center col-span-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <h3 className="text-xl font-medium text-gray-700">No products found</h3>
-                <p className="text-gray-500">Check back later or try another category</p>
-              </motion.div>
-            )}
-
-            {products.map((product) => (
+            {products[activeCategory]?.map((product) => (
               <motion.div
                 key={product._id}
                 layout
@@ -147,14 +171,16 @@ const Home = () => {
                 className="relative overflow-hidden bg-white shadow-md cursor-pointer rounded-xl group"
                 onMouseEnter={() => setIsHovering(product._id)}
                 onMouseLeave={() => setIsHovering(null)}
-                onClick={() => navigate(`/product/${product._id}`)}
+                onClick={() => handleProductClick(product._id)}
               >
+                {/* Product Image */}
                 <div className="relative overflow-hidden h-80">
                   <img
-                    src={`http://localhost:5000/${product.images[0]}`}
+                    src={`http://localhost:5000${product.images[0]}`}
                     alt={product.name}
                     className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
                   />
+                  {/* Quick Actions */}
                   {isHovering === product._id && (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -183,6 +209,7 @@ const Home = () => {
                   )}
                 </div>
 
+                {/* Product Info */}
                 <div className="p-5">
                   <h3 className="mb-2 text-lg font-semibold">{product.name}</h3>
                   <p className="mb-3 text-sm text-gray-600 line-clamp-2">
@@ -193,6 +220,11 @@ const Home = () => {
                       <span className="text-lg font-bold text-pink-600">
                         ${product.price.toFixed(2)}
                       </span>
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <span className="ml-2 text-sm text-gray-400 line-through">
+                          ${product.originalPrice.toFixed(2)}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center">
                       <span className="text-yellow-400">★★★★☆</span>
@@ -206,6 +238,14 @@ const Home = () => {
             ))}
           </AnimatePresence>
         </motion.div>
+
+        {/* Empty State */}
+        {products[activeCategory]?.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <h3 className="mb-4 text-xl font-medium text-gray-700">No products found</h3>
+            <p className="text-gray-500">We couldn't find any products in this category</p>
+          </div>
+        )}
       </motion.div>
     </div>
   );

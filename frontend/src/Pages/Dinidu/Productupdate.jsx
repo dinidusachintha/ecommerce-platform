@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const ProductUpdate = () => {
   const { id } = useParams();
@@ -28,45 +30,40 @@ const ProductUpdate = () => {
     { value: 'kids', label: "Kids Collection" }
   ];
 
-  // Fetch product data (replace with your API call)
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setIsLoading(true);
-        // Simulate API call
-        const mockProduct = {
-          id: id,
-          name: "Summer Dress",
-          price: 49.99,
-          description: "A stylish and lightweight summer dress",
-          category: "women",
-          colors: ["Pink", "Blue"],
-          sizes: ["S", "M", "L"],
-          images: [
-            "https://example.com/images/dress1.jpg",
-            "https://example.com/images/dress2.jpg"
-          ]
-        };
+        const response = await axios.get(`/api/products/${id}`);
+        const productData = response.data;
         
         setProduct({
-          name: mockProduct.name,
-          price: mockProduct.price,
-          description: mockProduct.description,
-          category: mockProduct.category,
-          colors: [...mockProduct.colors],
-          sizes: [...mockProduct.sizes],
+          name: productData.name,
+          price: productData.price,
+          description: productData.description,
+          category: productData.category,
+          colors: [...productData.colors],
+          sizes: [...productData.sizes],
           images: []
         });
-        setExistingImages(mockProduct.images.map(url => ({ url, isExisting: true })));
+        
+        setExistingImages(productData.images.map(image => ({ 
+          url: `/uploads/${image}`,
+          name: image,
+          isExisting: true 
+        })));
+        
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to fetch product:", error);
+        toast.error('Failed to load product');
         setIsLoading(false);
+        navigate('/admin/products');
       }
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, navigate]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -120,7 +117,7 @@ const ProductUpdate = () => {
   const handleNewImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + newImages.length > 5) {
-      alert('Maximum 5 new images allowed');
+      toast.error('Maximum 5 new images allowed');
       return;
     }
 
@@ -136,37 +133,49 @@ const ProductUpdate = () => {
 
   const handleRemoveImage = (index, isExisting) => {
     if (isExisting) {
-      // Mark existing image for deletion
       setExistingImages(existingImages.filter((_, i) => i !== index));
     } else {
-      // Remove new image
+      URL.revokeObjectURL(newImages[index].url);
       setNewImages(newImages.filter((_, i) => i !== index));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     
-    // Prepare data for submission
-    const productData = {
-      ...product,
-      price: parseFloat(product.price),
-      // Keep existing images that weren't removed
-      existingImages: existingImages.map(img => img.url),
-      // Add new images (in a real app, you would upload these)
-      newImages: newImages.map(img => img.file)
-    };
+    try {
+      const formData = new FormData();
+      formData.append('name', product.name);
+      formData.append('price', product.price);
+      formData.append('description', product.description);
+      formData.append('category', product.category);
+      
+      product.colors.forEach(color => formData.append('colors', color));
+      product.sizes.forEach(size => formData.append('sizes', size));
+      
+      // Add existing images that weren't removed
+      existingImages.forEach(img => formData.append('existingImages', img.name));
+      
+      // Add new images
+      newImages.forEach(img => formData.append('images', img.file));
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Updated product data:', productData);
-      setIsSubmitting(false);
-      alert('Product updated successfully!');
+      await axios.put(`/api/products/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success('Product updated successfully!');
       navigate('/admin/products');
-    }, 1500);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast.error(error.response?.data?.message || 'Failed to update product');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -196,7 +205,6 @@ const ProductUpdate = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md">
-          {/* Basic Information */}
           <div className="mb-8">
             <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Basic Information</h2>
             
@@ -263,7 +271,6 @@ const ProductUpdate = () => {
             </div>
           </div>
 
-          {/* Colors */}
           <div className="mb-8">
             <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Colors*</h2>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -300,7 +307,6 @@ const ProductUpdate = () => {
             </div>
           </div>
 
-          {/* Sizes */}
           <div className="mb-8">
             <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Sizes*</h2>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -337,7 +343,6 @@ const ProductUpdate = () => {
             </div>
           </div>
 
-          {/* Images */}
           <div className="mb-8">
             <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Images*</h2>
             {errors.images && <p className="mt-1 text-sm text-red-500">{errors.images}</p>}
@@ -403,7 +408,6 @@ const ProductUpdate = () => {
             </div>
           </div>
 
-          {/* Submit Button */}
           <div className="flex justify-end gap-4">
             <button
               type="button"
