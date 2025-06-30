@@ -61,9 +61,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 console.log('Before requiring routes');
 app.use('/api/products', require('./routes/productRoutes'));
-console.log('After productRoutes');
 app.use('/api/users', require('./routes/userRoutes'));
-console.log('After userRoutes');
+console.log('After requiring routes');
 
 // Health check endpoint
 app.get('/health', (req, res) => {
