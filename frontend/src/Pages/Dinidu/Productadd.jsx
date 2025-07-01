@@ -1,21 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import { X, Plus, Upload, ShoppingBag } from 'lucide-react';
+import { addProduct } from '../api/products';
 
-// Configure axios instance (simple version)
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // Replace with your actual API URL
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 const ProductAdd = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState({
@@ -128,26 +116,13 @@ const ProductAdd = () => {
     setIsSubmitting(true);
     
     try {
-      const formData = new FormData();
-      
-      // Append product data
-      formData.append('name', product.name);
-      formData.append('price', product.price);
-      formData.append('description', product.description);
-      formData.append('category', product.category);
-      product.colors.forEach(color => formData.append('colors', color));
-      product.sizes.forEach(size => formData.append('sizes', size));
-      
-      // Append images
-      selectedImages.forEach(image => {
-        formData.append('images', image);
-      });
+      const productData = {
+        ...product,
+        images: selectedImages,
+        price: parseFloat(product.price)
+      };
 
-      const response = await api.post('/products', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      await addProduct(productData);
       
       toast.success('Product added successfully!');
       navigate('/admin/products');
@@ -158,6 +133,7 @@ const ProductAdd = () => {
       if (error.response) {
         if (error.response.status === 401) {
           errorMessage = 'Unauthorized - Please login again';
+          navigate('/login');
         } else if (error.response.data?.message) {
           errorMessage = error.response.data.message;
         } else if (error.response.data?.error) {
