@@ -8,33 +8,34 @@ const morgan = require('morgan');
 // Initialize Express app
 const app = express();
 
-// Middleware
-app.use(express.json({ limit: '10mb' })); // Increased payload limit
+// Middleware Configuration
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true // Enable credentials for cookies/sessions
+  credentials: true
 }));
-
-// Logging middleware
 app.use(morgan('dev'));
 
-// Load environment variables with defaults
+// Environment Variables with Defaults
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce';
 const port = process.env.PORT || 5000;
 const nodeEnv = process.env.NODE_ENV || 'development';
 
-// MongoDB connection
-mongoose.connect(mongoURI, {
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s
-})
-.then(() => console.log('MongoDB connected successfully'))
-.catch((err) => {
-  console.error('MongoDB connection error:', err.message);
-  process.exit(1);
-});
+// MongoDB Connection with Improved Error Handling
+const connectDB = async () => {
+  try {
+    await mongoose.connect(mongoURI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    process.exit(1);
+  }
+};
 
-// MongoDB connection events
+// MongoDB Event Listeners
 mongoose.connection.on('connected', () => {
   console.log('Mongoose connected to DB');
 });
@@ -47,26 +48,20 @@ mongoose.connection.on('disconnected', () => {
   console.log('Mongoose disconnected');
 });
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  await mongoose.connection.close();
-  console.log('Mongoose connection closed due to app termination');
-  process.exit(0);
-});
+// Serve Static Files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
+// Route Imports (Ensure these files exist)
+const productRoutes = require('./routes/productRoutes');
+const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
 
-// Routes
-console.log('Before requiring routes');
-app.use('/api/products', require('./routes/productRoutes'));
-console.log('After productRoutes');
-app.use('/api/users', require('./routes/userRoutes'));
-console.log('After userRoutes');
-app.use('/api/auth', require('./routes/authRoutes'));
-console.log('After authRoutes');
+// Mount Routes
+app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
-// Health check endpoint
+// Health Check Endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'UP',
@@ -76,11 +71,11 @@ app.get('/health', (req, res) => {
 });
 
 // 404 Handler
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Error handling middleware
+// Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   const statusCode = err.statusCode || 500;
@@ -90,19 +85,31 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start the server
-const server = app.listen(port, () => {
-  console.log(`Server running in ${nodeEnv} mode on port ${port}`);
-});
+// Start Server after DB Connection
+const startServer = async () => {
+  await connectDB();
+  const server = app.listen(port, () => {
+    console.log(`Server running in ${nodeEnv} mode on port ${port}`);
+  });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
-  server.close(() => process.exit(1));
-});
+  // Graceful Shutdown
+  process.on('SIGINT', async () => {
+    await mongoose.connection.close();
+    console.log('Mongoose connection closed due to app termination');
+    server.close(() => process.exit(0));
+  });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  server.close(() => process.exit(1));
-});
+  // Unhandled Rejections
+  process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Rejection:', err);
+    server.close(() => process.exit(1));
+  });
+
+  // Uncaught Exceptions
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    server.close(() => process.exit(1));
+  });
+};
+
+startServer();
