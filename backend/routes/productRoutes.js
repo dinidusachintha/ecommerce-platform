@@ -42,7 +42,7 @@ router.post('/', authMiddleware, upload.array('images', 5), async (req, res) => 
     const parsedColors = Array.isArray(colors) ? colors : colors ? [colors] : [];
     const parsedSizes = Array.isArray(sizes) ? sizes : sizes ? [sizes] : [];
 
-    const images = req.files.map(file => `/uploads/${file.filename}`);
+    const images = req.files.map(file => `/Uploads/${file.filename}`);
 
     const product = new Product({
       name,

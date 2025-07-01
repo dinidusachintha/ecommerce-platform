@@ -1,4 +1,3 @@
-// Import required packages
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
@@ -25,9 +24,9 @@ const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce
 const port = process.env.PORT || 5000;
 const nodeEnv = process.env.NODE_ENV || 'development';
 
-// MongoDB connection with improved configuration
+// MongoDB connection
 mongoose.connect(mongoURI, {
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s
 })
 .then(() => console.log('MongoDB connected successfully'))
 .catch((err) => {
@@ -35,7 +34,7 @@ mongoose.connect(mongoURI, {
   process.exit(1);
 });
 
-// MongoDB connection events for better debugging
+// MongoDB connection events
 mongoose.connection.on('connected', () => {
   console.log('Mongoose connected to DB');
 });
@@ -56,14 +55,16 @@ process.on('SIGINT', async () => {
 });
 
 // Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
 // Routes
 console.log('Before requiring routes');
 app.use('/api/products', require('./routes/productRoutes'));
+console.log('After productRoutes');
 app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/auth', require('./routes/authRoutes')); // Re-added auth routes
-console.log('After requiring routes');
+console.log('After userRoutes');
+app.use('/api/auth', require('./routes/authRoutes'));
+console.log('After authRoutes');
 
 // Health check endpoint
 app.get('/health', (req, res) => {
