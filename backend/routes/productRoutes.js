@@ -1,76 +1,51 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
+const {
+  createProduct,
+  getProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+  deleteProductImage
+} = require('../controllers/productController');
+const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
-const Product = require('../models/Product');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'Uploads/');
+    cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
   }
 });
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed'), false);
+  }
+};
+
 const upload = multer({
   storage,
-  fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('Only image files are allowed'));
-    }
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      return cb(new Error('File size exceeds 5MB limit'));
-    }
-    cb(null, true);
-  },
+  fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
-// POST /api/products - Create a new product (protected)
-router.post('/', authMiddleware, upload.array('images', 5), async (req, res) => {
-  try {
-    const { name, price, description, category, colors, sizes } = req.body;
-    
-    // Validate required fields
-    if (!name || !price || !description || !category) {
-      return res.status(400).json({ message: 'Missing required fields' });
-    }
+router.route('/')
+  .get(getProducts)
+  .post(protect, admin, upload.array('images', 5), createProduct);
 
-    // Convert colors and sizes to arrays if they are strings
-    const parsedColors = Array.isArray(colors) ? colors : colors ? [colors] : [];
-    const parsedSizes = Array.isArray(sizes) ? sizes : sizes ? [sizes] : [];
+router.route('/:id')
+  .get(getProductById)
+  .put(protect, admin, upload.array('images', 5), updateProduct)
+  .delete(protect, admin, deleteProduct);
 
-    const images = req.files.map(file => `/Uploads/${file.filename}`);
-
-    const product = new Product({
-      name,
-      price: parseFloat(price),
-      description,
-      category,
-      colors: parsedColors,
-      sizes: parsedSizes,
-      images
-    });
-
-    await product.save();
-    res.status(201).json(product);
-  } catch (error) {
-    console.error('Error creating product:', error);
-    res.status(500).json({ message: 'Error creating product', error: error.message });
-  }
-});
-
-// GET /api/products - Get all products (public)
-router.get('/', async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ message: 'Error fetching products', error: error.message });
-  }
-});
+router.route('/:id/images/:imageId')
+  .delete(protect, admin, deleteProductImage);
 
 module.exports = router;
