@@ -26,9 +26,9 @@ const App = () => {
         <Route path="/product/:id" element={<ProductView />} />
         <Route path='/checkout' element={<Checkout />} />
 
-        <Route path='/productadd' element={<Producadd />} />
-        <Route path='/productupdate' element={<Productupdate />} />
-         <Route path='/productlist' element={<Productlist />} />
+        <Route path='/products/new' element={<Producadd />} />
+        <Route path='/products/edit/:id' element={<Productupdate />} />
+         <Route path='/products/list' element={<Productlist />} />
         <Route path='/cart' element={<Cart/>} />
 
 

@@ -1,414 +1,319 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { X, Plus, Upload, ShoppingBag, Loader } from 'lucide-react';
-import { useAddProductMutation, useUpdateProductMutation, useGetProductDetailsQuery } from '../redux/api/productApi';
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const Productadd = ({ mode = 'add' }) => {
+const ProductAdd = () => {
   const navigate = useNavigate();
-  const { id: productId } = useParams();
-  
-  const [addProduct, { isLoading: isAdding }] = useAddProductMutation();
-  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
-  
-  const { data: productData, isLoading, error } = useGetProductDetailsQuery(
-    productId, 
-    { skip: mode !== 'edit' }
-  );
-
-  const [product, setProduct] = useState({
+  const [formData, setFormData] = useState({
     name: '',
-    price: '',
     description: '',
+    price: '',
+    originalPrice: '',
     category: 'women',
-    colors: [],
-    sizes: [],
+    stock: ''
   });
-  const [newColor, setNewColor] = useState('');
-  const [newSize, setNewSize] = useState('');
-  const [selectedImages, setSelectedImages] = useState([]);
-  const [existingImages, setExistingImages] = useState([]);
-  const [errors, setErrors] = useState({});
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const fileInputRef = useRef(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const categories = [
-    { value: 'women', label: "Women's Collection" },
-    { value: 'men', label: "Men's Collection" },
-    { value: 'kids', label: "Kids Collection" }
-  ];
-
-  useEffect(() => {
-    if (mode === 'edit' && productData) {
-      setProduct({
-        name: productData.name,
-        price: productData.price.toString(),
-        description: productData.description,
-        category: productData.category,
-        colors: productData.colors,
-        sizes: productData.sizes,
-      });
-      setExistingImages(productData.images);
-    }
-  }, [mode, productData]);
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!product.name.trim()) newErrors.name = 'Product name is required';
-    if (!product.price || isNaN(product.price) || product.price <= 0) 
-      newErrors.price = 'Valid price is required';
-    if (!product.description.trim()) 
-      newErrors.description = 'Description is required';
-    if (product.colors.length === 0) 
-      newErrors.colors = 'At least one color is required';
-    if (product.sizes.length === 0) 
-      newErrors.sizes = 'At least one size is required';
-    if (existingImages.length + selectedImages.length === 0) 
-      newErrors.images = 'At least one image is required';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setProduct({ ...product, [name]: value });
-    if (errors[name]) setErrors({ ...errors, [name]: '' });
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleAddColor = () => {
-    if (newColor && !product.colors.includes(newColor)) {
-      setProduct({ ...product, colors: [...product.colors, newColor] });
-      setNewColor('');
-      if (errors.colors) setErrors({ ...errors, colors: '' });
-    }
-  };
-
-  const handleRemoveColor = (colorToRemove) => {
-    setProduct({ 
-      ...product, 
-      colors: product.colors.filter(color => color !== colorToRemove) 
-    });
-  };
-
-  const handleAddSize = () => {
-    if (newSize && !product.sizes.includes(newSize)) {
-      setProduct({ ...product, sizes: [...product.sizes, newSize] });
-      setNewSize('');
-      if (errors.sizes) setErrors({ ...errors, sizes: '' });
-    }
-  };
-
-  const handleRemoveSize = (sizeToRemove) => {
-    setProduct({ 
-      ...product, 
-      sizes: product.sizes.filter(size => size !== sizeToRemove) 
-    });
-  };
-
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + selectedImages.length + existingImages.length > 5) {
-      toast.error('Maximum 5 images allowed');
-      return;
-    }
-    
+    if (files.length === 0) return;
+
+    // Validate file types and sizes
     const validFiles = files.filter(file => {
-      if (!file.type.startsWith('image/')) {
-        toast.error(`File ${file.name} is not an image`);
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      if (!validTypes.includes(file.type)) {
+        setError('Only JPG, PNG, and WEBP images are allowed');
         return false;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`File ${file.name} is too large (max 5MB)`);
+      
+      if (file.size > maxSize) {
+        setError('Image size must be less than 5MB');
         return false;
       }
+      
       return true;
     });
-    
-    setSelectedImages([...selectedImages, ...validFiles]);
-    if (errors.images) setErrors({ ...errors, images: '' });
+
+    if (validFiles.length === 0) return;
+
+    // Create previews
+    const previews = validFiles.map(file => URL.createObjectURL(file));
+    setImagePreviews(prev => [...prev, ...previews]);
+    setError('');
+
+    // Upload to backend
+    try {
+      const uploadData = new FormData();
+      validFiles.forEach(file => uploadData.append('images', file));
+
+      const response = await axios.post('http://localhost:5000/api/upload', uploadData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(percentCompleted);
+        }
+      });
+
+      setImages(prev => [...prev, ...response.data.urls]);
+      setUploadProgress(0); // Reset progress after completion
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setError('Image upload failed. Please try again.');
+      // Remove failed upload previews
+      setImagePreviews(prev => prev.slice(0, -validFiles.length));
+      setUploadProgress(0);
+    }
   };
 
-  const handleRemoveImage = (index, isExisting = false) => {
-    if (isExisting) {
-      setExistingImages(existingImages.filter((_, i) => i !== index));
-    } else {
-      setSelectedImages(selectedImages.filter((_, i) => i !== index));
-    }
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
-    const formData = new FormData();
-    formData.append('name', product.name);
-    formData.append('price', product.price);
-    formData.append('description', product.description);
-    formData.append('category', product.category);
-    product.colors.forEach(color => formData.append('colors', color));
-    product.sizes.forEach(size => formData.append('sizes', size));
-    selectedImages.forEach(image => formData.append('images', image));
+    
+    // Validate form
+    if (images.length === 0) {
+      setError('Please upload at least one image');
+      return;
+    }
 
     try {
-      if (mode === 'add') {
-        await addProduct(formData).unwrap();
-        toast.success('Product added successfully!');
-      } else {
-        await updateProduct({ productId, formData }).unwrap();
-        toast.success('Product updated successfully!');
-      }
-      navigate('/admin/products');
+      const response = await axios.post('http://localhost:5000/api/products', {
+        ...formData,
+        images,
+        price: Number(formData.price),
+        originalPrice: formData.originalPrice ? Number(formData.originalPrice) : undefined,
+        stock: Number(formData.stock)
+      });
+
+      setSuccess('Product added successfully!');
+      setError('');
+      
+      // Redirect after 2 seconds
+      setTimeout(() => navigate('/'), 2000);
     } catch (error) {
-      toast.error(error?.data?.message || error.error || 'Something went wrong');
+      console.error('Error adding product:', error);
+      setError(error.response?.data?.message || 'Failed to add product');
+      setSuccess('');
     }
   };
 
-  if (mode === 'edit' && isLoading) {
-    return <div className="flex justify-center py-8"><Loader className="animate-spin" /></div>;
-  }
-
-  if (mode === 'edit' && error) {
-    return <div className="p-4 text-red-500">Error loading product: {error?.data?.message || 'Unknown error'}</div>;
-  }
-
   return (
-    <div className="container px-4 py-8 mx-auto">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">
-            {mode === 'add' ? 'Add New Product' : 'Edit Product'}
-          </h1>
-          <button 
-            onClick={() => navigate('/admin/products')}
-            className="flex items-center px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            <X className="w-5 h-5 mr-1" /> Cancel
-          </button>
-        </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="pt-24 pb-12 bg-gray-50 min-h-screen"
+    >
+      <div className="container mx-auto px-4">
+        <h1 className="text-3xl font-bold mb-8 text-center">Add New Product</h1>
+        
+        {/* Error/Success Messages */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            {success}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md">
-          {/* Basic Information */}
-          <div className="mb-8">
-            <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Basic Information</h2>
-            
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <label className="block mb-2 font-medium">Product Name*</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={product.name}
-                  onChange={handleInputChange}
-                  className={`w-full p-3 border rounded-lg ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
-                  placeholder="Enter product name"
-                />
-                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-              </div>
+        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md">
+          {/* Text Input Fields */}
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2">Product Name*</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-600"
+              required
+            />
+          </div>
 
-              <div>
-                <label className="block mb-2 font-medium">Price*</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3">$</span>
-                  <input
-                    type="number"
-                    name="price"
-                    value={product.price}
-                    onChange={handleInputChange}
-                    step="0.01"
-                    min="0"
-                    className={`w-full p-3 pl-8 border rounded-lg ${errors.price ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="0.00"
-                  />
-                </div>
-                {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
-              </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2">Description*</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-600"
+              rows="4"
+              required
+            />
+          </div>
+
+          {/* Price Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">Price*</label>
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-600"
+                min="0"
+                step="0.01"
+                required
+              />
             </div>
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">Original Price</label>
+              <input
+                type="number"
+                name="originalPrice"
+                value={formData.originalPrice}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-600"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
 
-            <div className="mt-6">
-              <label className="block mb-2 font-medium">Category*</label>
+          {/* Category and Stock */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">Category*</label>
               <select
                 name="category"
-                value={product.category}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-300 rounded-lg"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-600"
+                required
               >
-                {categories.map(category => (
-                  <option key={category.value} value={category.value}>
-                    {category.label}
-                  </option>
-                ))}
+                <option value="women">Women's Collection</option>
+                <option value="men">Men's Collection</option>
+                <option value="kids">Kids Collection</option>
               </select>
             </div>
-
-            <div className="mt-6">
-              <label className="block mb-2 font-medium">Description*</label>
-              <textarea
-                name="description"
-                value={product.description}
-                onChange={handleInputChange}
-                rows="4"
-                className={`w-full p-3 border rounded-lg ${errors.description ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="Enter product description"
-              ></textarea>
-              {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
-            </div>
-          </div>
-
-          {/* Colors */}
-          <div className="mb-8">
-            <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Colors*</h2>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {product.colors.map(color => (
-                <div key={color} className="flex items-center px-3 py-1 bg-gray-100 rounded-full">
-                  <span>{color}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveColor(color)}
-                    className="ml-2 text-red-500 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            {errors.colors && <p className="mt-1 text-sm text-red-500">{errors.colors}</p>}
-            
-            <div className="flex gap-2">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">Stock*</label>
               <input
-                type="text"
-                value={newColor}
-                onChange={(e) => setNewColor(e.target.value)}
-                className="flex-1 p-3 border border-gray-300 rounded-lg"
-                placeholder="Add color (e.g. Red)"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddColor()}
+                type="number"
+                name="stock"
+                value={formData.stock}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-600"
+                min="0"
+                required
               />
-              <button
-                type="button"
-                onClick={handleAddColor}
-                className="flex items-center px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
-              >
-                <Plus className="w-5 h-5 mr-1" /> Add
-              </button>
             </div>
           </div>
 
-          {/* Sizes */}
+          {/* Image Upload Section */}
           <div className="mb-8">
-            <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Sizes*</h2>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {product.sizes.map(size => (
-                <div key={size} className="flex items-center px-3 py-1 bg-gray-100 rounded-full">
-                  <span>{size}</span>
+            <label className="block text-gray-700 font-medium mb-2">Product Images*</label>
+            
+            {/* Preview Gallery */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative group h-40">
+                  <img 
+                    src={preview} 
+                    alt={`Preview ${index}`}
+                    className="h-full w-full object-cover rounded-lg border"
+                  />
                   <button
                     type="button"
-                    onClick={() => handleRemoveSize(size)}
-                    className="ml-2 text-red-500 hover:text-red-700"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label="Remove image"
                   >
-                    <X className="w-4 h-4" />
+                    ×
                   </button>
                 </div>
               ))}
             </div>
-            {errors.sizes && <p className="mt-1 text-sm text-red-500">{errors.sizes}</p>}
-            
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newSize}
-                onChange={(e) => setNewSize(e.target.value)}
-                className="flex-1 p-3 border border-gray-300 rounded-lg"
-                placeholder="Add size (e.g. M or 10)"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddSize()}
-              />
-              <button
-                type="button"
-                onClick={handleAddSize}
-                className="flex items-center px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
-              >
-                <Plus className="w-5 h-5 mr-1" /> Add
-              </button>
+
+            {/* Upload Progress */}
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                <div 
+                  className="bg-pink-600 h-2.5 rounded-full" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            )}
+
+            {/* Upload Controls */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Select Images
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  multiple
+                  accept="image/jpeg, image/png, image/webp"
+                />
+              </div>
+              <div className="text-sm text-gray-500">
+                {images.length > 0 ? (
+                  <span>{images.length} {images.length === 1 ? 'image' : 'images'} selected</span>
+                ) : (
+                  <span>No images selected (required)</span>
+                )}
+              </div>
             </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Supported formats: JPG, PNG, WEBP (Max 5MB each)
+            </p>
           </div>
 
-          {/* Images */}
-          <div className="mb-8">
-            <h2 className="pb-2 mb-4 text-lg font-semibold border-b">Images*</h2>
-            {errors.images && <p className="mt-1 text-sm text-red-500">{errors.images}</p>}
-            
-            <div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3 md:grid-cols-4">
-              {existingImages.map((image, index) => (
-                <div key={`existing-${index}`} className="relative group">
-                  <img 
-                    src={image} 
-                    alt={`Product ${index}`} 
-                    className="object-cover w-full h-32 rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index, true)}
-                    className="absolute p-1 text-white bg-red-500 rounded-full opacity-0 top-1 right-1 group-hover:opacity-100"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-
-              {selectedImages.map((image, index) => (
-                <div key={`new-${index}`} className="relative group">
-                  <img 
-                    src={URL.createObjectURL(image)} 
-                    alt={image.name} 
-                    className="object-cover w-full h-32 rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute p-1 text-white bg-red-500 rounded-full opacity-0 top-1 right-1 group-hover:opacity-100"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              
-              {(existingImages.length + selectedImages.length) < 5 && (
-                <label className="flex flex-col items-center justify-center h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-gray-400">
-                  <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <Upload className="w-8 h-8 text-gray-400" />
-                  <span className="mt-2 text-sm text-gray-500">Upload (max 5)</span>
-                </label>
-              )}
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end">
+          {/* Form Actions */}
+          <div className="flex justify-end gap-4 pt-4 border-t">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="px-6 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
-              className="flex items-center px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600 disabled:opacity-50"
-              disabled={isAdding || isUpdating}
+              className="px-6 py-2 text-white bg-pink-600 rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50"
+              disabled={images.length === 0}
             >
-              {isAdding || isUpdating ? (
-                <>
-                  <Loader className="w-5 h-5 mr-2 animate-spin" />
-                  {mode === 'add' ? 'Adding...' : 'Updating...'}
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-5 h-5 mr-2" />
-                  {mode === 'add' ? 'Save Product' : 'Update Product'}
-                </>
-              )}
+              Add Product
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
-export default Productadd;
+export default ProductAdd;

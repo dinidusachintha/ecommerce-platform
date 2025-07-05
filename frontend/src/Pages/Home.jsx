@@ -7,7 +7,7 @@ import axios from 'axios';
 const Home = () => {
   const [activeCategory, setActiveCategory] = useState("women");
   const [isHovering, setIsHovering] = useState(null);
-  const [products, setProducts] = useState({ women: [], men: [], kids: [] });
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -37,15 +37,7 @@ const Home = () => {
       try {
         setLoading(true);
         const response = await axios.get('http://localhost:5000/api/products');
-        
-        // Organize products by category
-        const productsByCategory = {
-          women: response.data.filter(product => product.category === 'women'),
-          men: response.data.filter(product => product.category === 'men'),
-          kids: response.data.filter(product => product.category === 'kids')
-        };
-        
-        setProducts(productsByCategory);
+        setProducts(response.data);
         setError(null);
       } catch (err) {
         console.error('Error fetching products:', err);
@@ -57,6 +49,11 @@ const Home = () => {
 
     fetchProducts();
   }, []);
+
+  // Filter products by active category
+  const filteredProducts = products.filter(
+    product => product.category === activeCategory
+  );
 
   // Handle product click
   const handleProductClick = (productId) => {
@@ -159,7 +156,7 @@ const Home = () => {
           className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           <AnimatePresence>
-            {products[activeCategory]?.map((product) => (
+            {filteredProducts?.map((product) => (
               <motion.div
                 key={product._id}
                 layout
@@ -176,7 +173,7 @@ const Home = () => {
                 {/* Product Image */}
                 <div className="relative overflow-hidden h-80">
                   <img
-                    src={`http://localhost:5000${product.images[0]}`}
+                    src={product.images[0]}
                     alt={product.name}
                     className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
                   />
@@ -240,7 +237,7 @@ const Home = () => {
         </motion.div>
 
         {/* Empty State */}
-        {products[activeCategory]?.length === 0 && (
+        {filteredProducts?.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12">
             <h3 className="mb-4 text-xl font-medium text-gray-700">No products found</h3>
             <p className="text-gray-500">We couldn't find any products in this category</p>
