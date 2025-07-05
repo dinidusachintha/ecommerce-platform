@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { X, Plus, Upload, ShoppingBag } from 'lucide-react';
-import { addProduct } from '../api/products';
+import { X, Plus, Upload, ShoppingBag, Loader } from 'lucide-react';
+import { useAddProductMutation, useUpdateProductMutation, useGetProductDetailsQuery } from '../redux/api/productApi';
 
-const ProductAdd = () => {
+const Productadd = ({ mode = 'add' }) => {
   const navigate = useNavigate();
+  const { id: productId } = useParams();
+  
+  const [addProduct, { isLoading: isAdding }] = useAddProductMutation();
+  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+  
+  const { data: productData, isLoading, error } = useGetProductDetailsQuery(
+    productId, 
+    { skip: mode !== 'edit' }
+  );
+
   const [product, setProduct] = useState({
     name: '',
     price: '',
@@ -17,7 +27,7 @@ const ProductAdd = () => {
   const [newColor, setNewColor] = useState('');
   const [newSize, setNewSize] = useState('');
   const [selectedImages, setSelectedImages] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingImages, setExistingImages] = useState([]);
   const [errors, setErrors] = useState({});
 
   const categories = [
@@ -25,6 +35,20 @@ const ProductAdd = () => {
     { value: 'men', label: "Men's Collection" },
     { value: 'kids', label: "Kids Collection" }
   ];
+
+  useEffect(() => {
+    if (mode === 'edit' && productData) {
+      setProduct({
+        name: productData.name,
+        price: productData.price.toString(),
+        description: productData.description,
+        category: productData.category,
+        colors: productData.colors,
+        sizes: productData.sizes,
+      });
+      setExistingImages(productData.images);
+    }
+  }, [mode, productData]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -37,7 +61,7 @@ const ProductAdd = () => {
       newErrors.colors = 'At least one color is required';
     if (product.sizes.length === 0) 
       newErrors.sizes = 'At least one size is required';
-    if (selectedImages.length === 0) 
+    if (existingImages.length + selectedImages.length === 0) 
       newErrors.images = 'At least one image is required';
     
     setErrors(newErrors);
@@ -82,7 +106,7 @@ const ProductAdd = () => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + selectedImages.length > 5) {
+    if (files.length + selectedImages.length + existingImages.length > 5) {
       toast.error('Maximum 5 images allowed');
       return;
     }
@@ -103,57 +127,56 @@ const ProductAdd = () => {
     if (errors.images) setErrors({ ...errors, images: '' });
   };
 
-  const handleRemoveImage = (index) => {
-    const updatedImages = [...selectedImages];
-    updatedImages.splice(index, 1);
-    setSelectedImages(updatedImages);
+  const handleRemoveImage = (index, isExisting = false) => {
+    if (isExisting) {
+      setExistingImages(existingImages.filter((_, i) => i !== index));
+    } else {
+      setSelectedImages(selectedImages.filter((_, i) => i !== index));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setIsSubmitting(true);
-    
-    try {
-      const productData = {
-        ...product,
-        images: selectedImages,
-        price: parseFloat(product.price)
-      };
+    const formData = new FormData();
+    formData.append('name', product.name);
+    formData.append('price', product.price);
+    formData.append('description', product.description);
+    formData.append('category', product.category);
+    product.colors.forEach(color => formData.append('colors', color));
+    product.sizes.forEach(size => formData.append('sizes', size));
+    selectedImages.forEach(image => formData.append('images', image));
 
-      await addProduct(productData);
-      
-      toast.success('Product added successfully!');
+    try {
+      if (mode === 'add') {
+        await addProduct(formData).unwrap();
+        toast.success('Product added successfully!');
+      } else {
+        await updateProduct({ productId, formData }).unwrap();
+        toast.success('Product updated successfully!');
+      }
       navigate('/admin/products');
     } catch (error) {
-      console.error('Error:', error);
-      let errorMessage = 'Failed to add product. Please try again.';
-      
-      if (error.response) {
-        if (error.response.status === 401) {
-          errorMessage = 'Unauthorized - Please login again';
-          navigate('/login');
-        } else if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data?.error) {
-          errorMessage = error.response.data.error;
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
+      toast.error(error?.data?.message || error.error || 'Something went wrong');
     }
   };
+
+  if (mode === 'edit' && isLoading) {
+    return <div className="flex justify-center py-8"><Loader className="animate-spin" /></div>;
+  }
+
+  if (mode === 'edit' && error) {
+    return <div className="p-4 text-red-500">Error loading product: {error?.data?.message || 'Unknown error'}</div>;
+  }
 
   return (
     <div className="container px-4 py-8 mx-auto">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">Add New Product</h1>
+          <h1 className="text-2xl font-bold">
+            {mode === 'add' ? 'Add New Product' : 'Edit Product'}
+          </h1>
           <button 
             onClick={() => navigate('/admin/products')}
             className="flex items-center px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
@@ -312,8 +335,25 @@ const ProductAdd = () => {
             {errors.images && <p className="mt-1 text-sm text-red-500">{errors.images}</p>}
             
             <div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3 md:grid-cols-4">
+              {existingImages.map((image, index) => (
+                <div key={`existing-${index}`} className="relative group">
+                  <img 
+                    src={image} 
+                    alt={`Product ${index}`} 
+                    className="object-cover w-full h-32 rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index, true)}
+                    className="absolute p-1 text-white bg-red-500 rounded-full opacity-0 top-1 right-1 group-hover:opacity-100"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+
               {selectedImages.map((image, index) => (
-                <div key={index} className="relative group">
+                <div key={`new-${index}`} className="relative group">
                   <img 
                     src={URL.createObjectURL(image)} 
                     alt={image.name} 
@@ -329,7 +369,7 @@ const ProductAdd = () => {
                 </div>
               ))}
               
-              {selectedImages.length < 5 && (
+              {(existingImages.length + selectedImages.length) < 5 && (
                 <label className="flex flex-col items-center justify-center h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-gray-400">
                   <input 
                     type="file" 
@@ -350,10 +390,19 @@ const ProductAdd = () => {
             <button
               type="submit"
               className="flex items-center px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600 disabled:opacity-50"
-              disabled={isSubmitting}
+              disabled={isAdding || isUpdating}
             >
-              <ShoppingBag className="w-5 h-5 mr-2" />
-              {isSubmitting ? 'Saving...' : 'Save Product'}
+              {isAdding || isUpdating ? (
+                <>
+                  <Loader className="w-5 h-5 mr-2 animate-spin" />
+                  {mode === 'add' ? 'Adding...' : 'Updating...'}
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-5 h-5 mr-2" />
+                  {mode === 'add' ? 'Save Product' : 'Update Product'}
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -362,4 +411,4 @@ const ProductAdd = () => {
   );
 };
 
-export default ProductAdd;
+export default Productadd;
